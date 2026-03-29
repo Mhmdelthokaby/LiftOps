@@ -1,9 +1,11 @@
+using LiftOps_BackEnd.API.Filters;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LiftOps_BackEnd.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ServiceFilter(typeof(DevelopmentOnlyFilter))]
 public class TestController : ControllerBase
 {
     [HttpGet]

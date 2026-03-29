@@ -67,6 +67,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet("value")]
+    [Authorize(Policy = "RequireInventory")]
     public async Task<IActionResult> GetTotalValue()
     {
         var result = await _mediator.Send(new GetInventoryTotalValueQuery());
