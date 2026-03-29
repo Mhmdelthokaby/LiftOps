@@ -12,7 +12,6 @@ namespace LiftOps_BackEnd.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class EmergencyController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -23,6 +22,7 @@ namespace LiftOps_BackEnd.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "EmergencyReport")]
         public async Task<IActionResult> CreateTicket([FromBody] CreateEmergencyTicketDto dto)
         {
             var result = await _mediator.Send(new CreateEmergencyTicketCommand { Dto = dto });
@@ -31,6 +31,7 @@ namespace LiftOps_BackEnd.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "EmergencyRead")]
         public async Task<IActionResult> GetAllTickets()
         {
             var result = await _mediator.Send(new GetAllEmergencyTicketsQuery());
@@ -38,6 +39,7 @@ namespace LiftOps_BackEnd.API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "EmergencyRead")]
         public async Task<IActionResult> GetTicketById(Guid id)
         {
             var result = await _mediator.Send(new GetEmergencyTicketByIdQuery { TicketId = id });
@@ -46,6 +48,7 @@ namespace LiftOps_BackEnd.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "EmergencyManage")]
         public async Task<IActionResult> UpdateTicket(Guid id, [FromBody] UpdateEmergencyTicketDto dto)
         {
             var result = await _mediator.Send(new UpdateEmergencyTicketCommand { TicketId = id, Dto = dto });
@@ -54,6 +57,7 @@ namespace LiftOps_BackEnd.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "EmergencyManage")]
         public async Task<IActionResult> DeleteTicket(Guid id)
         {
             var result = await _mediator.Send(new DeleteEmergencyTicketCommand { TicketId = id });
@@ -62,6 +66,7 @@ namespace LiftOps_BackEnd.API.Controllers
         }
 
         [HttpPut("{id}/assign-technician")]
+        [Authorize(Policy = "EmergencyDispatch")]
         public async Task<IActionResult> AssignTechnician(Guid id, [FromBody] AssignEmergencyTechnicianDto dto)
         {
             var result = await _mediator.Send(new AssignEmergencyTechnicianCommand { TicketId = id, Dto = dto });
@@ -70,6 +75,7 @@ namespace LiftOps_BackEnd.API.Controllers
         }
 
         [HttpPost("{id}/resolve")]
+        [Authorize(Policy = "EmergencyResolve")]
         public async Task<IActionResult> ResolveTicket(Guid id, [FromBody] ResolveEmergencyTicketRequest request)
         {
             var command = new ResolveEmergencyTicketCommand { TicketId = id, Notes = request.Notes };
@@ -79,6 +85,7 @@ namespace LiftOps_BackEnd.API.Controllers
         }
 
         [HttpGet("open")]
+        [Authorize(Policy = "EmergencyRead")]
         public async Task<IActionResult> GetOpenTickets()
         {
             var result = await _mediator.Send(new GetOpenEmergencyTicketsQuery());
