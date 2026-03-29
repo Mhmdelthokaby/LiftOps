@@ -1,0 +1,193 @@
+================================================================================
+                    COLLINS ELEVATOR MANAGEMENT SYSTEM
+                         Project Description
+================================================================================
+
+PROJECT OVERVIEW
+----------------
+Collins is a comprehensive full-stack management system designed for an elevator 
+company that specializes in supplying, installing, inspecting, and maintaining 
+electric elevators. The system automates all business operations, reduces manual 
+effort, and provides managers with complete visibility across all departments.
+
+TECHNOLOGY STACK
+----------------
+Backend:
+  - .NET 10.0 (C#)
+  - Clean Architecture + Domain-Driven Design (DDD) + SOLID Principles
+  - Entity Framework Core with SQL Server
+  - MediatR (CQRS Pattern)
+  - JWT Authentication & Authorization
+  - AutoMapper for DTOs
+  - QuestPDF for PDF generation
+  - SignalR for real-time notifications (planned)
+
+Frontend:
+  - Next.js 16 (App Router)
+  - React 19
+  - TypeScript
+  - Tailwind CSS
+  - ShadCN UI Components
+  - Server Components + Client Components
+
+CORE MODULES
+------------
+
+1. USER & ROLE MANAGEMENT
+   - Manager Admin (Full Access)
+   - Installation Admin
+   - Inventory Admin
+   - Maintenance Admin
+   - Breakdown Admin
+   - Finance Admin
+   - Technicians
+   - Role-based access control with granular permissions
+
+2. INSTALLATION MODULE
+   - Inspection Request workflow (3-stage pre-installation)
+   - Offer creation and approval system
+   - Project creation from approved offers
+   - 4-stage installation pipeline:
+     * Stage 1-3: Supply & Install phases
+     * Stage 4: Final Delivery & Handover
+   - Multiple elevators support per client
+   - Technician assignment
+   - Spare parts tracking per stage
+   - PDF delivery report generation
+   - Auto-delivery to Maintenance Module after completion
+
+3. MAINTENANCE MODULE
+   - Maintenance contract management
+   - Monthly maintenance scheduling
+   - Free maintenance period tracking
+   - Auto-switch from free to paid maintenance
+   - Maintenance visit tracking
+   - Spare parts usage recording
+   - Payment collection tracking
+   - Maintenance status management (Active, Paused, Frozen)
+   - Monthly timetable view
+
+4. INVENTORY MODULE
+   - Spare parts catalog management
+   - Category-based organization
+   - Stock level tracking
+   - Supplier information
+   - Stock value calculations
+   - Low stock alerts
+   - Out-of-stock notifications
+   - Parts request tracking from other modules
+
+5. BREAKDOWN/EMERGENCY MODULE
+   - Emergency ticket creation
+   - Severity levels (High, Medium, Low)
+   - Technician assignment
+   - Status tracking (Pending, In Progress, Done)
+   - Spare parts usage
+   - Payment status tracking
+   - Google Maps integration for locations
+
+6. FINANCE & INVOICING MODULE
+   - Installation invoice generation
+   - Maintenance invoice generation
+   - Breakdown service invoicing
+   - Spare parts sales invoicing
+   - Payment tracking
+   - Income/Expense management
+   - Financial reporting and analytics
+   - Expected income calculations
+   - Unpaid invoices tracking
+   - Monthly financial dashboards
+
+7. TECHNICIAN MANAGEMENT
+   - Technician profile management
+   - Workload tracking
+   - Project assignment
+   - Performance metrics
+   - Rating system
+   - Availability status
+
+8. DASHBOARD & REPORTING
+   - Real-time KPIs
+   - Revenue analytics
+   - Project status overview
+   - Activity feed
+   - Monthly reports
+   - Export functionality (PDF, Excel)
+
+KEY FEATURES
+------------
+- Complete workflow automation from inspection to installation to maintenance
+- Real-time notifications for critical events
+- PDF generation for reports, invoices, and delivery documents
+- Multi-elevator project support
+- Client information reuse and management
+- Spare parts integration across all modules
+- Financial tracking and reporting
+- Role-based security and access control
+- Responsive web interface
+- Mobile-friendly design
+
+ARCHITECTURE PATTERNS
+----------------------
+Backend:
+  - Clean Architecture (Domain, Application, Infrastructure, API layers)
+  - Repository Pattern
+  - Unit of Work Pattern
+  - CQRS with MediatR
+  - Result Pattern for error handling
+  - Validation Behaviors
+  - Dependency Injection
+
+Frontend:
+  - Component-based architecture
+  - Server and Client Components separation
+  - Custom hooks for reusable logic
+  - Centralized API client
+  - Type-safe API integration
+  - Form validation
+  - Error handling with user feedback
+
+BUSINESS WORKFLOW
+-----------------
+1. Client submits inspection request
+2. Engineer records technical hoistway specifications
+3. Admin creates pricing offer
+4. Client/Manager approves or rejects offer
+5. Approved offer converts to installation project
+6. 4-stage installation process begins
+7. Upon completion, elevator moves to maintenance module
+8. Free maintenance period applies automatically
+9. Monthly maintenance visits scheduled
+10. Emergency breakdowns handled separately
+11. All financial transactions tracked and invoiced
+
+DEPLOYMENT
+----------
+Backend API URL: https://collins-management.runasp.net
+Frontend: Next.js application (deployable to Vercel or similar)
+
+PROJECT STATUS
+--------------
+- Core modules implemented and functional
+- Installation workflow complete
+- Maintenance module operational
+- Inventory management active
+- Emergency/Breakdown system working
+- Finance module in development
+- Real-time notifications planned
+- Email service integration planned
+
+DOCUMENTATION
+-------------
+- PROJECT_IDEA.md - Complete system requirements
+- BACKEND_STATUS.md - Backend implementation status
+- FRONTEND_STATUS.md - Frontend implementation status
+- API_ENDPOINTS.md - API documentation
+- VERCEL_DEPLOYMENT.md - Deployment guide
+- INSPECTION_OFFER_WORKFLOW.md - Workflow details
+
+================================================================================
+This system provides end-to-end management for elevator company operations,
+enhancing efficiency, reducing manual work, and ensuring smooth coordination
+between all departments.
+================================================================================
