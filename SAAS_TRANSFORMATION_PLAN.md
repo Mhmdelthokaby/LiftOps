@@ -1,6 +1,6 @@
-# SaaS Transformation Plan — Collins Elevator Platform
+# SaaS Transformation Plan — LiftOps Elevator Platform
 
-**Document purpose:** Technical reference extracted from the repository (`Collins` ASP.NET Core backend, `collins-frontend` Next.js app) to support evolving the product into multi-tenant SaaS.  
+**Document purpose:** Technical reference extracted from the repository (`LiftOps` ASP.NET Core backend, `liftops-frontend` Next.js app) to support evolving the product into multi-tenant SaaS.  
 **Stack (from code):** ASP.NET Core, Entity Framework Core, SQL Server, JWT + ASP.NET Identity, MediatR, Next.js (App Router), REST.
 
 ---
@@ -39,7 +39,7 @@ The application supports **elevator installation project management**, **post-in
 - Policies: `RequireManager`, `RequireInstallation`, `RequireMaintenance`, `RequireInventory`, `RequireFinance`, `RequireFaults`.
 - Several endpoints use `[AllowAnonymous]` or have **no** `[Authorize]` (called out in §6).
 
-**Request/response:** Unless noted, bodies are JSON DTOs from `Collins-BackEnd.Application` (e.g. `CreateProjectDto`, `CreateFaultTicketDto`). Exact field lists are **not** duplicated here; see the corresponding `*Dto` types and command/query handlers in the Application project.
+**Request/response:** Unless noted, bodies are JSON DTOs from `LiftOps-BackEnd.Application` (e.g. `CreateProjectDto`, `CreateFaultTicketDto`). Exact field lists are **not** duplicated here; see the corresponding `*Dto` types and command/query handlers in the Application project.
 
 ---
 
@@ -289,7 +289,7 @@ The following lists **table name**, **key columns** (not every audit field repea
 
 ---
 
-## 4. Frontend (`collins-frontend`)
+## 4. Frontend (`liftops-frontend`)
 
 Stack: **Next.js App Router**, client-side role checks from `localStorage` (`lib/user.ts`), API wrapper `lib/api-client.ts` + `lib/api.ts`.
 
@@ -323,7 +323,7 @@ Stack: **Next.js App Router**, client-side role checks from `localStorage` (`lib
 
 ### 4.2 Backend endpoints without matching helpers in `lib/api.ts` (scan result)
 
-- **Faults module (`/api/Faults/*`):** **Not Found** in `collins-frontend/lib/api.ts` — no dedicated fault ticket UI discovered in `app/` routes.
+- **Faults module (`/api/Faults/*`):** **Not Found** in `liftops-frontend/lib/api.ts` — no dedicated fault ticket UI discovered in `app/` routes.
 - **Installation elevator assign/unassign:** **Not Found** in `lib/api.ts` (endpoints exist on backend).
 - **Some paths** use mixed casing (`/api/Installation/...`) — works on default ASP.NET routing but is inconsistent with lowercase `installation` elsewhere.
 
@@ -448,7 +448,7 @@ Stack: **Next.js App Router**, client-side role checks from `localStorage` (`lib
 
 ### Phase 2 — API and UI tenancy
 
-1. Add company admin UI (settings) — replace hardcoded “Collins Elevators” placeholders on `settings` page with API-backed company profile.
+1. Add company admin UI (settings) — replace hardcoded “LiftOps” placeholders on `settings` page with API-backed company profile.
 2. Ensure all MediatR handlers use tenant-scoped repositories (no `ListAllAsync()` without filter).
 3. Add frontend: tenant switcher only if supporting multi-company users.
 
@@ -470,11 +470,11 @@ Stack: **Next.js App Router**, client-side role checks from `localStorage` (`lib
 
 | Path | Role |
 |------|------|
-| `Collins/Collins-BackEnd.API` | HTTP API, controllers, `Program.cs` |
-| `Collins/Collins-BackEnd.Application` | MediatR features, DTOs |
-| `Collins/Collins-BackEnd.Domain` | Entities, enums, role names |
-| `Collins/Collins-BackEnd.Infrastructure` | EF Core, migrations, services |
-| `collins-frontend` | Next.js UI |
+| `LiftOps/LiftOps-BackEnd.API` | HTTP API, controllers, `Program.cs` |
+| `LiftOps/LiftOps-BackEnd.Application` | MediatR features, DTOs |
+| `LiftOps/LiftOps-BackEnd.Domain` | Entities, enums, role names |
+| `LiftOps/LiftOps-BackEnd.Infrastructure` | EF Core, migrations, services |
+| `liftops-frontend` | Next.js UI |
 
 ---
 

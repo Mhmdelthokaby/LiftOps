@@ -1,7 +1,7 @@
 # 🎨 Frontend Status & Requirements
 
 ## 📋 Overview
-This document tracks the implementation status of the Collins Frontend (Next.js) and identifies what needs to be completed to fully align with `PROJECT_IDEA.md` and connect with the backend.
+This document tracks the implementation status of the LiftOps Frontend (Next.js) and identifies what needs to be completed to fully align with `PROJECT_IDEA.md` and connect with the backend.
 
 ---
 

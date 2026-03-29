@@ -2,7 +2,7 @@
 
 ## ✅ Backend & Frontend Implementation Complete
 
-This document summarizes the complete implementation of the new Inspection & Offer workflow for the Collins Installation Management System.
+This document summarizes the complete implementation of the new Inspection & Offer workflow for the LiftOps Installation Management System.
 
 ---
 
@@ -211,7 +211,7 @@ Created from Accepted Offer → 4-Stage Installation → Completed
 
 ### Backend
 ```
-Collins-BackEnd.Application/
+LiftOps-BackEnd.Application/
 ├── DTOs/Installation/
 │   ├── InspectionDtos.cs
 │   └── OfferDtos.cs
@@ -234,7 +234,7 @@ Collins-BackEnd.Application/
 
 ### Frontend
 ```
-collins-frontend/
+liftops-frontend/
 ├── components/installation/
 │   ├── inspection-list.tsx
 │   ├── create-inspection-form.tsx

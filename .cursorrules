@@ -1,4 +1,4 @@
-# Collins Project - Cursor Rules
+# LiftOps Project - Cursor Rules
 
 ## Project Overview
 This is a full-stack elevator management system with:
@@ -41,8 +41,8 @@ This is a full-stack elevator management system with:
 - Use `DbSet<T>` for entity collections
 - Always use async methods (`ToListAsync`, `FirstOrDefaultAsync`, etc.)
 - Use `Include()` for eager loading related entities
-- Migrations: `dotnet ef migrations add MigrationName --project Collins-BackEnd.Infrastructure --startup-project Collins-BackEnd.API`
-- Apply migrations: `dotnet ef database update --project Collins-BackEnd.Infrastructure --startup-project Collins-BackEnd.API`
+- Migrations: `dotnet ef migrations add MigrationName --project LiftOps-BackEnd.Infrastructure --startup-project LiftOps-BackEnd.API`
+- Apply migrations: `dotnet ef database update --project LiftOps-BackEnd.Infrastructure --startup-project LiftOps-BackEnd.API`
 
 #### MediatR Pattern
 - Commands: `CreateXCommand`, `UpdateXCommand`, `DeleteXCommand`

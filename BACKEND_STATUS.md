@@ -1,7 +1,7 @@
 # 🔧 Backend Status & Requirements
 
 ## 📋 Overview
-This document tracks the implementation status of the Collins Backend (.NET 10) and identifies what needs to be completed to fully align with `PROJECT_IDEA.md` and connect with the frontend.
+This document tracks the implementation status of the LiftOps Backend (.NET 10) and identifies what needs to be completed to fully align with `PROJECT_IDEA.md` and connect with the frontend.
 
 ---
 

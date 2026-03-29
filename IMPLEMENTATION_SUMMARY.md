@@ -139,8 +139,8 @@
 
 1. Run database migration:
    ```bash
-   dotnet ef migrations add AddInspectionQuotationFlow --project Collins/Collins-BackEnd.Infrastructure --startup-project Collins/Collins-BackEnd.API
-   dotnet ef database update --project Collins/Collins-BackEnd.Infrastructure --startup-project Collins/Collins-BackEnd.API
+   dotnet ef migrations add AddInspectionQuotationFlow --project LiftOps/LiftOps-BackEnd.Infrastructure --startup-project LiftOps/LiftOps-BackEnd.API
+   dotnet ef database update --project LiftOps/LiftOps-BackEnd.Infrastructure --startup-project LiftOps/LiftOps-BackEnd.API
    ```
 
 2. Create frontend pages (see remaining tasks above)
