@@ -31,10 +31,19 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var useInMemory = configuration.GetValue("UseInMemoryDatabase", false);
 
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString,
-                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+        if (useInMemory)
+        {
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseInMemoryDatabase("LiftOpsDb"));
+        }
+        else
+        {
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString,
+                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+        }
 
         services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
         {
@@ -84,8 +93,8 @@ public static class DependencyInjection
         services.AddScoped<IEmergencyService, EmergencyService>();
         services.AddScoped<LiftOps_BackEnd.Application.Interfaces.Installation.ICustomerStatusService, CustomerStatusService>();
 
-        // Background Services
-        services.AddHostedService<FreeMaintenanceProcessorService>();
+        if (!useInMemory)
+            services.AddHostedService<FreeMaintenanceProcessorService>();
 
         return services;
     }

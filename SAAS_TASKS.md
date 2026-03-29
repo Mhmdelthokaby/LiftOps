@@ -13,8 +13,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Document every `[AllowAnonymous]` and justify retention.
 
 ### SEC-002 — Tighten Emergency module authorization
-- [ ] Replace class-level `[Authorize]` only on `EmergencyController` with explicit policies aligned to product rules (e.g. roles allowed to create vs resolve).
-- [ ] Add integration tests for forbidden cross-role access.
+- [x] Replace class-level `[Authorize]` only on `EmergencyController` with explicit policies aligned to product rules (e.g. roles allowed to create vs resolve).
+- [x] Add integration tests for forbidden cross-role access.
 
 ### SEC-003 — Remove unsafe identity fallbacks
 - [ ] In installation project creation (and similar), remove `Guid.NewGuid()` fallback when installation admin user id is missing from JWT; return 401/403 instead.

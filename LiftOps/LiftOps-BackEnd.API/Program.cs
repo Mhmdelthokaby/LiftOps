@@ -59,6 +59,16 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireInventory", policy => policy.RequireRole(Roles.Manager, Roles.InventoryAdmin));
     options.AddPolicy("RequireFinance", policy => policy.RequireRole(Roles.Manager, Roles.FinanceAdmin));
     options.AddPolicy("RequireFaults", policy => policy.RequireRole(Roles.Manager, Roles.FaultsAdmin, Roles.MaintenanceAdmin));
+    options.AddPolicy("EmergencyReport", policy => policy.RequireRole(
+        Roles.Manager, Roles.MaintenanceAdmin, Roles.InstallationAdmin, Roles.FaultsAdmin, Roles.Technician));
+    options.AddPolicy("EmergencyRead", policy => policy.RequireRole(
+        Roles.Manager, Roles.MaintenanceAdmin, Roles.InstallationAdmin, Roles.FaultsAdmin, Roles.Technician));
+    options.AddPolicy("EmergencyDispatch", policy => policy.RequireRole(
+        Roles.Manager, Roles.MaintenanceAdmin, Roles.FaultsAdmin));
+    options.AddPolicy("EmergencyResolve", policy => policy.RequireRole(
+        Roles.Manager, Roles.MaintenanceAdmin, Roles.FaultsAdmin, Roles.Technician));
+    options.AddPolicy("EmergencyManage", policy => policy.RequireRole(
+        Roles.Manager, Roles.MaintenanceAdmin));
 });
 
 builder.Services.AddDataProtection();
@@ -80,27 +90,31 @@ builder.Services.AddSwaggerGen(c => {
 
 var app = builder.Build();
 
-// Migrate and Seed Database
-using (var scope = app.Services.CreateScope())
+// Migrate and Seed Database (skipped when UseInMemoryDatabase=true, e.g. integration tests)
+var useInMemoryDb = app.Configuration.GetValue<bool>("UseInMemoryDatabase");
+if (!useInMemoryDb)
 {
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        logger.LogInformation("Applying database migrations...");
-        await context.Database.MigrateAsync();
-        logger.LogInformation("Database migrations applied successfully.");
+        var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        try
+        {
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            logger.LogInformation("Applying database migrations...");
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully.");
 
-        var userManager = services.GetRequiredService<UserManager<AppUser>>();
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-        await AdminSeeder.SeedAsync(userManager, roleManager);
-        // DashboardDataSeeder.SeedAsync(context); // Commented out - only manager/admin seeding is active
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "An error occurred during migration or seeding.");
-        throw; // Re-throw to prevent app from starting with a broken database
+            var userManager = services.GetRequiredService<UserManager<AppUser>>();
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+            await AdminSeeder.SeedAsync(userManager, roleManager);
+            // DashboardDataSeeder.SeedAsync(context); // Commented out - only manager/admin seeding is active
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred during migration or seeding.");
+            throw; // Re-throw to prevent app from starting with a broken database
+        }
     }
 }
 
@@ -121,3 +135,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
