@@ -23,6 +23,8 @@ using LiftOps_BackEnd.Application.Features.Maintenance.Commands.AssignVisitToTec
 using LiftOps_BackEnd.Application.Features.Maintenance.Commands.AssignTechniciansToContractVisits;
 using LiftOps_BackEnd.Application.Features.Maintenance.Commands.UpdateVisitStatus;
 using LiftOps_BackEnd.Application.Features.Maintenance.Commands.UpdateVisitOrder;
+using LiftOps_BackEnd.API.Options;
+using LiftOps_BackEnd.API.Security;
 using LiftOps_BackEnd.Application.Interfaces.Installation;
 using LiftOps_BackEnd.Application.Interfaces.Maintenance;
 using LiftOps_BackEnd.Domain.Common;
@@ -30,6 +32,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,11 +46,19 @@ namespace LiftOps_BackEnd.API.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IPdfGenerator _pdfGenerator;
+        private readonly MaintenanceVisitPdfAccessService _pdfAccessService;
+        private readonly MaintenancePdfOptions _maintenancePdfOptions;
 
-        public MaintenanceController(IMediator mediator, IPdfGenerator pdfGenerator)
+        public MaintenanceController(
+            IMediator mediator,
+            IPdfGenerator pdfGenerator,
+            MaintenanceVisitPdfAccessService pdfAccessService,
+            IOptions<MaintenancePdfOptions> maintenancePdfOptions)
         {
             _mediator = mediator;
             _pdfGenerator = pdfGenerator;
+            _pdfAccessService = pdfAccessService;
+            _maintenancePdfOptions = maintenancePdfOptions.Value;
         }
 
         [HttpPost("add-contract")]
@@ -368,20 +379,61 @@ namespace LiftOps_BackEnd.API.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Download visit PDF. Requires JWT (Manager, MaintenanceAdmin, or Technician) or a valid short-lived pdfToken from POST .../pdf-share-token.
+        /// </summary>
         [HttpGet("visit/{visitId}/pdf")]
-        [AllowAnonymous] // Allow public access (or keep it authorized if preferred)
-        public async Task<IActionResult> DownloadPdf(Guid visitId)
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadPdf(Guid visitId, [FromQuery] string? pdfToken = null)
         {
+            if (!IsMaintenancePdfDownloadAuthorized(visitId, pdfToken))
+                return Unauthorized(new { Message = "Authentication required: send Authorization Bearer token, or a valid pdfToken query parameter." });
+
             var service = HttpContext.RequestServices.GetRequiredService<IMaintenanceService>();
             var visit = await service.GetVisitByIdAsync(visitId);
-            
+
             if (visit == null) return NotFound(new { Message = "Visit not found." });
 
             var pdfBytes = await _pdfGenerator.GenerateMaintenanceVisitReportAsync(visit);
-            
+
             var fileName = $"Maintenance_Report_{visit.MaintenanceElevator?.Contract?.ProjectNumber ?? visitId.ToString()}_{visit.VisitDate:yyyyMMdd}.pdf";
-            
+
             return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        /// <summary>
+        /// Issue a time-limited pdfToken for sharing the maintenance visit PDF without repeating JWT (e.g. email link). Same role rules as completing a visit.
+        /// </summary>
+        [HttpPost("visit/{visitId}/pdf-share-token")]
+        [Authorize(Roles = Roles.Manager + "," + Roles.MaintenanceAdmin + "," + Roles.Technician)]
+        public IActionResult IssuePdfShareToken(Guid visitId)
+        {
+            var token = _pdfAccessService.CreateToken(visitId);
+            var expiresAtUtc = _pdfAccessService.GetTokenExpiryUtc();
+            var path = $"/api/maintenance/visit/{visitId}/pdf?pdfToken={Uri.EscapeDataString(token)}";
+            return Ok(new
+            {
+                pdfToken = token,
+                expiresAtUtc,
+                downloadPath = path,
+                lifetimeMinutes = _maintenancePdfOptions.PdfAccessTokenLifetimeMinutes
+            });
+        }
+
+        private bool IsMaintenancePdfDownloadAuthorized(Guid visitId, string? pdfToken)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return User.IsInRole(Roles.Manager)
+                    || User.IsInRole(Roles.MaintenanceAdmin)
+                    || User.IsInRole(Roles.Technician);
+            }
+
+            if (!string.IsNullOrWhiteSpace(pdfToken)
+                && _pdfAccessService.TryValidateToken(pdfToken, visitId, out _))
+                return true;
+
+            return false;
         }
 
         // Assign visit to technician for a specific day

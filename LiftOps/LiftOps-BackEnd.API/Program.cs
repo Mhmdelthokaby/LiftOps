@@ -1,9 +1,13 @@
+using LiftOps_BackEnd.API.Filters;
+using LiftOps_BackEnd.API.Options;
+using LiftOps_BackEnd.API.Security;
 using LiftOps_BackEnd.Application;
 using LiftOps_BackEnd.Domain.Common;
 using LiftOps_BackEnd.Domain.Entities;
 using LiftOps_BackEnd.Infrastructure;
 using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -56,6 +60,11 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireFinance", policy => policy.RequireRole(Roles.Manager, Roles.FinanceAdmin));
     options.AddPolicy("RequireFaults", policy => policy.RequireRole(Roles.Manager, Roles.FaultsAdmin, Roles.MaintenanceAdmin));
 });
+
+builder.Services.AddDataProtection();
+builder.Services.Configure<MaintenancePdfOptions>(builder.Configuration.GetSection(MaintenancePdfOptions.SectionName));
+builder.Services.AddScoped<MaintenanceVisitPdfAccessService>();
+builder.Services.AddScoped<DevelopmentOnlyFilter>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
