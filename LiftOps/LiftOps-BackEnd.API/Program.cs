@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Net;
+using System.Linq;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -199,6 +201,24 @@ if (forwardedHeadersEnabled)
 }
 
 app.UseCors("AllowFrontend");
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (FluentValidation.ValidationException ex)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            message = "Validation failed",
+            errors = ex.Errors.Select(e => e.ErrorMessage).ToArray()
+        });
+    }
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
