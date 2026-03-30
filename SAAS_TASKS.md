@@ -17,8 +17,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Add integration tests for forbidden cross-role access.
 
 ### SEC-003 — Remove unsafe identity fallbacks
-- [ ] In installation project creation (and similar), remove `Guid.NewGuid()` fallback when installation admin user id is missing from JWT; return 401/403 instead.
-- [ ] Add unit tests for handler behavior when claims are absent.
+- [x] In installation project creation (and similar), remove `Guid.NewGuid()` fallback when installation admin user id is missing from JWT; return 401/403 instead.
+- [x] Add unit tests for handler behavior when claims are absent.
 
 ### SEC-004 — CORS and forwarded headers
 - [ ] Replace `SetIsOriginAllowed(_ => true)` with configurable allowed origins from `appsettings` / env for staging and production.

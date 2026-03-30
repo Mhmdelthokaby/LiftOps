@@ -25,6 +25,9 @@ namespace LiftOps_BackEnd.Application.Features.Technicians.Commands
 
         public async Task<Result<Unit>> Handle(AssignTechnicianCommand request, CancellationToken cancellationToken)
         {
+            if (request.AssignedByUserId == Guid.Empty)
+                return Result<Unit>.Failure(IdentityErrors.AuthenticatedUserIdentityRequired);
+
             try
             {
                 foreach (var techId in request.Dto.TechnicianIds)

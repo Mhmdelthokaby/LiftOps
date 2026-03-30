@@ -44,6 +44,9 @@ namespace LiftOps_BackEnd.Application.Features.Installation.Commands
 
         public async Task<Result<Guid>> Handle(ConvertOfferToProjectCommand request, CancellationToken cancellationToken)
         {
+            if (request.InstallationAdminId == Guid.Empty)
+                return Result<Guid>.Failure(IdentityErrors.AuthenticatedUserIdentityRequired);
+
             try
             {
                 var offer = await _offerRepository.GetOfferWithInspectionAsync(request.OfferId);

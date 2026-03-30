@@ -1,13 +1,13 @@
 using LiftOps_BackEnd.Application.DTOs.Installation;
 using LiftOps_BackEnd.Application.Features.Installation.Commands;
 using LiftOps_BackEnd.Application.Features.Installation.Queries;
-using LiftOps_BackEnd.Application.Features.Installation.Queries; // General Queries namespace
 using LiftOps_BackEnd.Application.Features.Technicians.Commands;
 using LiftOps_BackEnd.Application.Common;
 using LiftOps_BackEnd.Domain.Common;
 using LiftOps_BackEnd.Domain.Entities.Installation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -31,11 +31,9 @@ namespace LiftOps_BackEnd.API.Controllers
         [HttpPost("project/add")]
         public async Task<ActionResult<Result<Guid>>> CreateProject([FromBody] CreateProjectDto dto)
         {
-            // Get InstallationAdminId from claims (or use a default for now)
-            var installationAdminIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var installationAdminId = installationAdminIdClaim != null && Guid.TryParse(installationAdminIdClaim, out var adminId) 
-                ? adminId 
-                : Guid.NewGuid(); // Fallback for development/testing
+            if (!TryGetAuthenticatedUserId(out var installationAdminId))
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    Result<Guid>.Failure(IdentityErrors.AuthenticatedUserIdentityRequired));
 
             var command = new CreateInstallationProjectCommand
             {
@@ -162,12 +160,14 @@ namespace LiftOps_BackEnd.API.Controllers
         public async Task<IActionResult> AssignTechnicians(Guid elevatorId, [FromBody] AssignTechnicianDto dto)
         {
             dto.ElevatorId = elevatorId;
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            var command = new AssignTechnicianCommand 
-            { 
+            if (!TryGetAuthenticatedUserId(out var assignedByUserId))
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    Result<Unit>.Failure(IdentityErrors.AuthenticatedUserIdentityRequired));
+
+            var command = new AssignTechnicianCommand
+            {
                 Dto = dto,
-                AssignedByUserId = userId != null ? Guid.Parse(userId) : Guid.Empty 
+                AssignedByUserId = assignedByUserId
             };
             
             var result = await _mediator.Send(command);
@@ -190,8 +190,9 @@ namespace LiftOps_BackEnd.API.Controllers
         [Authorize(Policy = "RequireInstallation")]
         public async Task<ActionResult<Result<Guid>>> CreateInspectionRequest([FromBody] CreateInspectionRequestDto dto)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Guid.TryParse(userIdString, out var adminId);
+            if (!TryGetAuthenticatedUserId(out var adminId))
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    Result<Guid>.Failure(IdentityErrors.AuthenticatedUserIdentityRequired));
 
             var command = new CreateInspectionRequestCommand
             {
@@ -300,8 +301,9 @@ namespace LiftOps_BackEnd.API.Controllers
         [Authorize(Policy = "RequireInstallation")]
         public async Task<ActionResult<Result<Guid>>> ConvertOfferToProject(Guid offerId)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Guid.TryParse(userIdString, out var adminId);
+            if (!TryGetAuthenticatedUserId(out var adminId))
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    Result<Guid>.Failure(IdentityErrors.AuthenticatedUserIdentityRequired));
 
             var command = new ConvertOfferToProjectCommand
             {
@@ -317,8 +319,9 @@ namespace LiftOps_BackEnd.API.Controllers
         [Authorize(Policy = "RequireInstallation")]
         public async Task<ActionResult<Result<Guid>>> CreateInspectionProject([FromBody] CreateInspectionProjectDto dto)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Guid.TryParse(userIdString, out var adminId);
+            if (!TryGetAuthenticatedUserId(out var adminId))
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    Result<Guid>.Failure(IdentityErrors.AuthenticatedUserIdentityRequired));
 
             var command = new CreateInspectionProjectCommand
             {
@@ -384,6 +387,13 @@ namespace LiftOps_BackEnd.API.Controllers
 
             var command = new RejectQuotationCommand { Dto = dto };
             return await _mediator.Send(command);
+        }
+
+        private bool TryGetAuthenticatedUserId(out Guid userId)
+        {
+            userId = default;
+            var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return !string.IsNullOrEmpty(value) && Guid.TryParse(value, out userId);
         }
     }
 }

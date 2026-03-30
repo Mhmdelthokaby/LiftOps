@@ -34,6 +34,9 @@ namespace LiftOps_BackEnd.Application.Features.Installation.Commands
 
         public async Task<Result<Guid>> Handle(CreateInstallationProjectCommand request, CancellationToken cancellationToken)
         {
+            if (request.InstallationAdminId == Guid.Empty)
+                return Result<Guid>.Failure(IdentityErrors.AuthenticatedUserIdentityRequired);
+
             // Map Customer
             var customer = _mapper.Map<Customer>(request.ProjectDto.Customer);
             
