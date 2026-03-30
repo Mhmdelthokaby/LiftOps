@@ -25,8 +25,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Configure `ForwardedHeaders` if behind reverse proxy for correct scheme/host.
 
 ### SEC-005 — Input validation pass
-- [ ] Ensure all write endpoints use FluentValidation or equivalent; align DTOs with max lengths matching DB columns.
-- [ ] Add missing validation on MediatR commands that currently trust raw DTOs.
+- [x] Ensure all write endpoints use FluentValidation or equivalent; align DTOs with max lengths matching DB columns.
+- [x] Add missing validation on MediatR commands that currently trust raw DTOs.
 
 ### SEC-006 — Secrets and configuration
 - [ ] Verify JWT signing keys, connection strings, and third-party keys are only from environment / Key Vault — no secrets in repo.
