@@ -3,6 +3,16 @@
 **Document purpose:** Technical reference extracted from the repository (`LiftOps` ASP.NET Core backend, `liftops-frontend` Next.js app) to support evolving the product into multi-tenant SaaS.  
 **Stack (from code):** ASP.NET Core, Entity Framework Core, SQL Server, JWT + ASP.NET Identity, MediatR, Next.js (App Router), REST.
 
+### Recent repository changes (March 2026)
+
+| Change | Detail |
+|--------|--------|
+| **Product branding** | User-facing titles, metadata, and docs were aligned on **LiftOps** (replacing prior **Collins** naming in UI copy and headings). Example: Next.js `metadata.title` uses the LiftOps product name. |
+| **Backend consolidation** | The legacy **Collins** API tree (e.g. `Collins/Collins-BackEnd.API`) was **removed** from this repo. The only maintained backend is the **LiftOps-BackEnd** solution under `LiftOps/` (`.NET 10`: API, Application, Domain, Infrastructure). |
+| **SaaS roadmap** | No multi-tenant or subscription implementation was added by this rename/removal; sections **§6–8** still describe current gaps and planned work. |
+
+**ملخص:** تم توحيد الاسم الظاهر للمستخدم على LiftOps، وحذف مشروع الـ API القديم الخاص بـ Collins، والاعتماد على حل LiftOps-BackEnd داخل المجلد `LiftOps/` فقط.
+
 ---
 
 ## 1. Project Overview
@@ -468,6 +478,8 @@ Stack: **Next.js App Router**, client-side role checks from `localStorage` (`lib
 
 ## Appendix A — Solution layout (reference)
 
+Repository root is the **LiftOps** git project; backend projects live in the nested **`LiftOps/`** folder (same names as the product).
+
 | Path | Role |
 |------|------|
 | `LiftOps/LiftOps-BackEnd.API` | HTTP API, controllers, `Program.cs` |
@@ -478,4 +490,4 @@ Stack: **Next.js App Router**, client-side role checks from `localStorage` (`lib
 
 ---
 
-*This document reflects the repository state at extraction time. If a behavior is not listed here, treat it as **Not Found** unless verified in code.*
+*Last reviewed with repo state: March 2026 (includes Collins → LiftOps branding and removal of legacy Collins backend). If a behavior is not listed here, treat it as **Not Found** unless verified in code.*
