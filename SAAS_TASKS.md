@@ -21,8 +21,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Add unit tests for handler behavior when claims are absent.
 
 ### SEC-004 — CORS and forwarded headers
-- [ ] Replace `SetIsOriginAllowed(_ => true)` with configurable allowed origins from `appsettings` / env for staging and production.
-- [ ] Configure `ForwardedHeaders` if behind reverse proxy for correct scheme/host.
+- [x] Replace `SetIsOriginAllowed(_ => true)` with configurable allowed origins from `appsettings` / env for staging and production.
+- [x] Configure `ForwardedHeaders` if behind reverse proxy for correct scheme/host.
 
 ### SEC-005 — Input validation pass
 - [ ] Ensure all write endpoints use FluentValidation or equivalent; align DTOs with max lengths matching DB columns.
