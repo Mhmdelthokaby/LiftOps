@@ -330,7 +330,8 @@ In this Clean Architecture solution, "Services" are split between **Domain Servi
 ### Deployment
 1.  **Build**: `dotnet publish -c Release -o ./publish`
 2.  **Hosting**: IIS, Kestrel, or Docker.
-3.  **CI/CD**: GitHub Actions workflow (recommended) to build and run tests.
+3.  **Secrets required**: provide `Jwt__Key` (JWT signing key) via environment variables or Key Vault; do not store real secrets in `appsettings.json`.
+4.  **CI/CD**: GitHub Actions workflow (recommended) to build and run tests.
 
 ---
 
