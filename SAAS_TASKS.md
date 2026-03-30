@@ -29,8 +29,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Add missing validation on MediatR commands that currently trust raw DTOs.
 
 ### SEC-006 — Secrets and configuration
-- [ ] Verify JWT signing keys, connection strings, and third-party keys are only from environment / Key Vault — no secrets in repo.
-- [ ] Add checklist item to deployment runbook.
+- [x] Verify JWT signing keys, connection strings, and third-party keys are only from environment / Key Vault — no secrets in repo.
+- [x] Add checklist item to deployment runbook.
 
 ### OBS-001 — Dashboard metrics accuracy
 - [ ] Fix `OpenEmergencies` (or rename) so KPI reflects intended entity (`EmergencyTicket` vs `FaultTicket`) per product spec.
