@@ -7,9 +7,11 @@ using LiftOps_BackEnd.Domain.Entities;
 using LiftOps_BackEnd.Infrastructure;
 using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -20,13 +22,36 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+var corsAllowedOrigins = (builder.Configuration["Cors:AllowedOriginsCsv"] ?? string.Empty)
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+if (corsAllowedOrigins.Length == 0)
+{
+    corsAllowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.SetIsOriginAllowed(origin => true) // Allow any origin for development
-                  .AllowAnyHeader()
+            if (builder.Environment.IsDevelopment())
+            {
+                // Local development: keep it permissive for easier iteration.
+                policy.SetIsOriginAllowed(_ => true);
+            }
+            else if (corsAllowedOrigins.Length > 0)
+            {
+                // Staging/production: explicitly allow configured origins.
+                policy.WithOrigins(corsAllowedOrigins);
+            }
+            else
+            {
+                // No configured origins => browser calls will fail CORS preflight (safe default).
+                policy.SetIsOriginAllowed(_ => false);
+            }
+
+            policy.AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
         });
@@ -126,6 +151,52 @@ if (app.Environment.IsDevelopment())
 }
 
 // app.UseHttpsRedirection();
+
+var forwardedHeadersEnabled = builder.Configuration.GetValue<bool?>("ForwardedHeaders:Enabled")
+    ?? !app.Environment.IsDevelopment();
+
+if (forwardedHeadersEnabled)
+{
+    var forwardedHeadersOptions = new ForwardedHeadersOptions
+    {
+        ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor |
+            ForwardedHeaders.XForwardedProto |
+            ForwardedHeaders.XForwardedHost
+    };
+
+    // Optional hardening: trust forwarded headers only from known proxies/networks (configure in staging/prod).
+    var knownProxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>();
+    if (knownProxies != null)
+    {
+        foreach (var proxy in knownProxies)
+        {
+            if (IPAddress.TryParse(proxy, out var ip))
+                forwardedHeadersOptions.KnownProxies.Add(ip);
+        }
+    }
+
+    var knownNetworks = builder.Configuration.GetSection("ForwardedHeaders:KnownIPNetworks").Get<string[]>();
+    if (knownNetworks == null || knownNetworks.Length == 0)
+        knownNetworks = builder.Configuration.GetSection("ForwardedHeaders:KnownNetworks").Get<string[]>();
+
+    if (knownNetworks != null)
+    {
+        foreach (var network in knownNetworks)
+        {
+            try
+            {
+                forwardedHeadersOptions.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+            }
+            catch
+            {
+                // Ignore invalid entries; keep startup resilient.
+            }
+        }
+    }
+
+    app.UseForwardedHeaders(forwardedHeadersOptions);
+}
 
 app.UseCors("AllowFrontend");
 
