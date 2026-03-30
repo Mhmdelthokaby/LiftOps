@@ -33,8 +33,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Add checklist item to deployment runbook.
 
 ### OBS-001 — Dashboard metrics accuracy
-- [ ] Fix `OpenEmergencies` (or rename) so KPI reflects intended entity (`EmergencyTicket` vs `FaultTicket`) per product spec.
-- [ ] Remove or feature-flag hardcoded revenue/expenses in dashboard handler; return real aggregates or explicit “mock” flag in API for UI.
+- [x] Fix `OpenEmergencies` (or rename) so KPI reflects intended entity (`EmergencyTicket` vs `FaultTicket`) per product spec.
+- [x] Remove or feature-flag hardcoded revenue/expenses in dashboard handler; return real aggregates or explicit “mock” flag in API for UI.
 
 ---
 

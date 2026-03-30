@@ -4,8 +4,10 @@ using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
+using LiftOps_BackEnd.Domain.Entities.Emergency;
 using LiftOps_BackEnd.Domain.Entities.Faults;
 using LiftOps_BackEnd.Domain.Entities.Installation;
 using LiftOps_BackEnd.Domain.Entities.Maintenance;
@@ -33,7 +35,10 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
         var maintenanceVisits = await _unitOfWork.Repository<MaintenanceVisit>().ListAllAsync();
         var maintenanceContracts = await _unitOfWork.Repository<MaintenanceContract>().ListAllAsync();
         var maintenanceElevators = await _unitOfWork.Repository<MaintenanceElevator>().ListAllAsync();
+        var emergencyTickets = await _unitOfWork.Repository<EmergencyTicket>().ListAllAsync();
         var faults = await _unitOfWork.Repository<FaultTicket>().ListAllAsync();
+        var maintenanceSparePartUsages = await _unitOfWork.Repository<MaintenanceSparePartUsage>().ListAllAsync();
+        var faultSparePartUsages = await _unitOfWork.Repository<FaultSparePartUsage>().ListAllAsync();
         var inventory = await _unitOfWork.Repository<InventoryItem>().ListAllAsync();
 
         // 2. KPI Calculations
@@ -87,27 +92,73 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             }
         }
 
-        var openEmergencies = faults.Count(f => f.Status == TicketStatus.Pending || f.Status == TicketStatus.InProgress);
+        // KPI: open emergencies must be based on EmergencyTickets (not FaultTickets)
+        var openEmergencies = emergencyTickets.Count(t =>
+            t.Status == EmergencyStatus.Open || t.Status == EmergencyStatus.InProgress);
 
         var lowStockItems = inventory.Count(i => i.StockQuantity < 10);
 
-        // 3. Revenue Data (Mocked for now as per plan, but structured dynamically)
-        // In real app, query Finance module transactions.
-        var revenueData = new List<RevenueDataPoint>
+        // 3. Revenue Data
+        // Revenue is approximated from MaintenanceContract.PricePerMonth for active contracts.
+        // Expenses are approximated from spare-part usage costs (MaintenanceSparePartUsage + FaultSparePartUsage).
+        // This removes hardcoded/mock month-by-month values while still using available domain data.
+        var revenueByMonth = new decimal[13]; // 1..12
+        var expensesByMonth = new decimal[13]; // 1..12
+
+        var year = now.Year;
+
+        // Map visit & fault dates so we can attribute usage to a month.
+        var maintenanceVisitDateById = maintenanceVisits.ToDictionary(v => v.Id, v => v.VisitDate);
+        var faultDateById = faults.ToDictionary(f => f.Id, f => f.FaultDate);
+
+        // Revenue: sum PricePerMonth of active contracts overlapping each month.
+        for (var month = 1; month <= 12; month++)
         {
-            new() { Month = "Jan", Revenue = 145000, Expenses = 98000 },
-            new() { Month = "Feb", Revenue = 168000, Expenses = 102000 },
-            new() { Month = "Mar", Revenue = 192000, Expenses = 115000 },
-            new() { Month = "Apr", Revenue = 178000, Expenses = 108000 },
-            new() { Month = "May", Revenue = 205000, Expenses = 122000 },
-            new() { Month = "Jun", Revenue = 198000, Expenses = 118000 },
-            new() { Month = "Jul", Revenue = 215000, Expenses = 125000 },
-            new() { Month = "Aug", Revenue = 228000, Expenses = 132000 },
-            new() { Month = "Sep", Revenue = 242000, Expenses = 138000 },
-            new() { Month = "Oct", Revenue = 235000, Expenses = 135000 },
-            new() { Month = "Nov", Revenue = 258000, Expenses = 145000 },
-            new() { Month = "Dec", Revenue = 275000, Expenses = 152000 },
-        };
+            var monthStart = new DateTime(year, month, 1);
+            var monthEnd = monthStart.AddMonths(1).AddTicks(-1);
+
+            var revenueForMonth = maintenanceContracts
+                .Where(c =>
+                    c.Status == MaintenanceContractStatus.Active &&
+                    c.StartDate <= monthEnd &&
+                    c.EndDate >= monthStart)
+                .Sum(c => c.PricePerMonth);
+
+            revenueByMonth[month] = revenueForMonth;
+        }
+
+        // Expenses: maintenance spare-part usages
+        foreach (var usage in maintenanceSparePartUsages)
+        {
+            if (!maintenanceVisitDateById.TryGetValue(usage.MaintenanceVisitId, out var visitDate))
+                continue;
+            if (visitDate.Year != year)
+                continue;
+
+            var month = visitDate.Month;
+            expensesByMonth[month] += usage.Quantity * usage.PriceAtTimeOfUsage;
+        }
+
+        // Expenses: fault spare-part usages
+        foreach (var usage in faultSparePartUsages)
+        {
+            if (!faultDateById.TryGetValue(usage.FaultTicketId, out var faultDate))
+                continue;
+            if (faultDate.Year != year)
+                continue;
+
+            var month = faultDate.Month;
+            expensesByMonth[month] += usage.Quantity * usage.PriceAtTimeOfUsage;
+        }
+
+        var revenueData = Enumerable.Range(1, 12)
+            .Select(m => new RevenueDataPoint
+            {
+                Month = new DateTime(year, m, 1).ToString("MMM", CultureInfo.InvariantCulture),
+                Revenue = revenueByMonth[m],
+                Expenses = expensesByMonth[m]
+            })
+            .ToList();
 
         // 4. Project Status Data
         // Simplified Logic: 
