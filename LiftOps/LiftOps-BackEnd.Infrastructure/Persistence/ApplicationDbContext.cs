@@ -24,6 +24,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
 
     public DbSet<InventoryItem> InventoryItems { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
+    public DbSet<Company> Companies { get; set; } = null!;
 
     // Installation Module
     public DbSet<Customer> Customers { get; set; } = null!;
@@ -98,6 +99,27 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
         modelBuilder.Entity<InventoryItem>()
             .Property(i => i.UnitPrice)
             .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.Name)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.Slug)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.BillingContactEmail)
+            .HasMaxLength(256);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.Timezone)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Company>()
+            .HasIndex(c => c.Slug)
+            .IsUnique()
+            .HasFilter("[Slug] IS NOT NULL AND [Slug] <> ''");
 
         modelBuilder.Entity<InstallationProject>()
            .Property(p => p.InstallationPricePerUnit)
