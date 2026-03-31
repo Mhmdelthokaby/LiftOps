@@ -101,8 +101,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Handle user with no company (invite pending) — return 403 with structured error code.
 
 ### AUTH-003 — Policies
-- [ ] Update authorization policies to combine role + tenant context (e.g. `RequireManager` AND same company as resource).
-- [ ] Add `RequireFinance` usage or remove dead policy from `Program.cs` if unused.
+- [x] Update authorization policies to combine role + tenant context (e.g. `RequireManager` AND same company as resource).
+- [x] Add `RequireFinance` usage or remove dead policy from `Program.cs` if unused.
 
 ### AUTH-004 — Resource-based checks
 - [ ] For `GET/PUT` by id, verify entity’s `CompanyId` matches JWT `company_id` before returning 200 (prevent ID enumeration across tenants).

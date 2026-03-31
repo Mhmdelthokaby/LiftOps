@@ -118,22 +118,39 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("RequireManager", policy => policy.RequireRole(Roles.Manager));
-    options.AddPolicy("RequireInstallation", policy => policy.RequireRole(Roles.Manager, Roles.InstallationAdmin));
-    options.AddPolicy("RequireMaintenance", policy => policy.RequireRole(Roles.Manager, Roles.MaintenanceAdmin));
-    options.AddPolicy("RequireInventory", policy => policy.RequireRole(Roles.Manager, Roles.InventoryAdmin));
-    options.AddPolicy("RequireFinance", policy => policy.RequireRole(Roles.Manager, Roles.FinanceAdmin));
-    options.AddPolicy("RequireFaults", policy => policy.RequireRole(Roles.Manager, Roles.FaultsAdmin, Roles.MaintenanceAdmin));
-    options.AddPolicy("EmergencyReport", policy => policy.RequireRole(
-        Roles.Manager, Roles.MaintenanceAdmin, Roles.InstallationAdmin, Roles.FaultsAdmin, Roles.Technician));
-    options.AddPolicy("EmergencyRead", policy => policy.RequireRole(
-        Roles.Manager, Roles.MaintenanceAdmin, Roles.InstallationAdmin, Roles.FaultsAdmin, Roles.Technician));
-    options.AddPolicy("EmergencyDispatch", policy => policy.RequireRole(
-        Roles.Manager, Roles.MaintenanceAdmin, Roles.FaultsAdmin));
-    options.AddPolicy("EmergencyResolve", policy => policy.RequireRole(
-        Roles.Manager, Roles.MaintenanceAdmin, Roles.FaultsAdmin, Roles.Technician));
-    options.AddPolicy("EmergencyManage", policy => policy.RequireRole(
-        Roles.Manager, Roles.MaintenanceAdmin));
+    static bool HasTenantClaim(AuthorizationHandlerContext context) =>
+        context.User.HasClaim(c => c.Type == "company_id" && !string.IsNullOrWhiteSpace(c.Value));
+
+    options.AddPolicy("RequireManager", policy => policy
+        .RequireRole(Roles.Manager)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("RequireInstallation", policy => policy
+        .RequireRole(Roles.Manager, Roles.InstallationAdmin)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("RequireMaintenance", policy => policy
+        .RequireRole(Roles.Manager, Roles.MaintenanceAdmin)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("RequireInventory", policy => policy
+        .RequireRole(Roles.Manager, Roles.InventoryAdmin)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("RequireFaults", policy => policy
+        .RequireRole(Roles.Manager, Roles.FaultsAdmin, Roles.MaintenanceAdmin)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("EmergencyReport", policy => policy
+        .RequireRole(Roles.Manager, Roles.MaintenanceAdmin, Roles.InstallationAdmin, Roles.FaultsAdmin, Roles.Technician)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("EmergencyRead", policy => policy
+        .RequireRole(Roles.Manager, Roles.MaintenanceAdmin, Roles.InstallationAdmin, Roles.FaultsAdmin, Roles.Technician)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("EmergencyDispatch", policy => policy
+        .RequireRole(Roles.Manager, Roles.MaintenanceAdmin, Roles.FaultsAdmin)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("EmergencyResolve", policy => policy
+        .RequireRole(Roles.Manager, Roles.MaintenanceAdmin, Roles.FaultsAdmin, Roles.Technician)
+        .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("EmergencyManage", policy => policy
+        .RequireRole(Roles.Manager, Roles.MaintenanceAdmin)
+        .RequireAssertion(HasTenantClaim));
 });
 
 builder.Services.AddDataProtection();
