@@ -125,6 +125,15 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
         modelBuilder.Entity<Company>()
             .Ignore(c => c.CompanyId);
 
+        modelBuilder.Entity<AppUser>()
+            .HasIndex(u => u.CompanyId);
+
+        modelBuilder.Entity<AppUser>()
+            .HasOne<Company>()
+            .WithMany()
+            .HasForeignKey(u => u.CompanyId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<InstallationProject>()
            .Property(p => p.InstallationPricePerUnit)
            .HasPrecision(18, 2);
