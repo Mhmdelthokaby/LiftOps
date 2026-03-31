@@ -129,19 +129,19 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 ## Phase 4: Subscription System (MVP)
 
 ### SUB-001 — Entities
-- [ ] `Subscription`: `Id`, `CompanyId`, `PlanId`, `Status` (Trial, Active, PastDue, Cancelled), `CurrentPeriodEnd`, `ExternalCustomerId` (nullable), audit.
-- [ ] `Plan`: `Id`, `Code` (basic, pro), `Name`, `MonthlyPrice`, feature flags JSON or columns.
+- [x] `Subscription`: `Id`, `CompanyId`, `PlanId`, `Status` (Trial, Active, PastDue, Cancelled), `CurrentPeriodEnd`, `ExternalCustomerId` (nullable), audit.
+- [x] `Plan`: `Id`, `Code` (basic, pro), `Name`, `MonthlyPrice`, feature flags JSON or columns.
 
 ### SUB-002 — Business rules
-- [ ] On create company: create `Subscription` with `Trial` and `CurrentPeriodEnd = UtcNow + trial days`.
-- [ ] Job or synchronous check: `PastDue` after failed payment webhook (stub webhook for MVP).
+- [x] On create company: create `Subscription` with `Trial` and `CurrentPeriodEnd = UtcNow + trial days`.
+- [x] Job or synchronous check: `PastDue` after failed payment webhook (stub webhook for MVP).
 
 ### SUB-003 — Enforcement middleware / filter
-- [ ] `SubscriptionStatusFilter` or middleware: block mutating verbs when `Cancelled` or `PastDue` (configurable allowlist: GET profile, POST billing portal).
-- [ ] Return 402 or 403 with machine-readable code `subscription_inactive`.
+- [x] `SubscriptionStatusFilter` or middleware: block mutating verbs when `Cancelled` or `PastDue` (configurable allowlist: GET profile, POST billing portal).
+- [x] Return 402 or 403 with machine-readable code `subscription_inactive`.
 
 ### SUB-004 — Admin override
-- [ ] Platform super-admin role (not tenant Manager) can extend trial / set status — separate API under `/api/platform/...` with distinct auth.
+- [x] Platform super-admin role (not tenant Manager) can extend trial / set status — separate API under `/api/platform/...` with distinct auth.
 
 ---
 
