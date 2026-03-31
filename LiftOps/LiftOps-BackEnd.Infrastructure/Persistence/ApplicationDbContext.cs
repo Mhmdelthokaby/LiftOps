@@ -3,6 +3,7 @@ using LiftOps_BackEnd.Domain.Entities.Installation;
 using LiftOps_BackEnd.Domain.Entities.Maintenance;
 using LiftOps_BackEnd.Domain.Entities.Faults;
 using LiftOps_BackEnd.Domain.Entities.Emergency;
+using LiftOps_BackEnd.Domain.Entities.Subscription;
 using LiftOps_BackEnd.Application.Interfaces; // Restored
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -77,6 +78,8 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
     public DbSet<InventoryItem> InventoryItems { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Company> Companies { get; set; } = null!;
+    public DbSet<Subscription> Subscriptions { get; set; } = null!;
+    public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; } = null!;
 
     // Installation Module
     public DbSet<Customer> Customers { get; set; } = null!;
@@ -275,6 +278,30 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .HasIndex(c => c.Slug)
             .IsUnique()
             .HasFilter("[Slug] IS NOT NULL AND [Slug] <> ''");
+
+        modelBuilder.Entity<SubscriptionPlan>()
+            .Property(p => p.Code)
+            .HasMaxLength(64);
+
+        modelBuilder.Entity<SubscriptionPlan>()
+            .Property(p => p.Name)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<SubscriptionPlan>()
+            .Property(p => p.MonthlyPrice)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<SubscriptionPlan>()
+            .Property(p => p.FeatureFlagsJson)
+            .HasMaxLength(4000);
+
+        modelBuilder.Entity<SubscriptionPlan>()
+            .HasIndex(p => p.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<Subscription>()
+            .Property(s => s.ExternalCustomerId)
+            .HasMaxLength(256);
 
         // Company is the tenant root and should not reference another tenant.
         modelBuilder.Entity<Company>()
