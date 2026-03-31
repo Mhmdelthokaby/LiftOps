@@ -66,8 +66,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Implementation reads from `HttpContext.User` claims after authentication.
 
 ### MT-007 — JWT claims
-- [ ] On login/refresh, emit `company_id` (and `company_slug` if used) as short-lived claims.
-- [ ] Update token validation to require `company_id` for all tenant-scoped endpoints.
+- [x] On login/refresh, emit `company_id` (and `company_slug` if used) as short-lived claims.
+- [x] Update token validation to require `company_id` for all tenant-scoped endpoints.
 
 ### MT-008 — Global query filters
 - [ ] In `OnModelCreating`, apply `HasQueryFilter` for each tenant entity: `e => e.CompanyId == _currentTenant.CompanyId`.
