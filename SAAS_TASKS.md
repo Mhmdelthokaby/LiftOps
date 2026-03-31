@@ -133,8 +133,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] `Plan`: `Id`, `Code` (basic, pro), `Name`, `MonthlyPrice`, feature flags JSON or columns.
 
 ### SUB-002 — Business rules
-- [ ] On create company: create `Subscription` with `Trial` and `CurrentPeriodEnd = UtcNow + trial days`.
-- [ ] Job or synchronous check: `PastDue` after failed payment webhook (stub webhook for MVP).
+- [x] On create company: create `Subscription` with `Trial` and `CurrentPeriodEnd = UtcNow + trial days`.
+- [x] Job or synchronous check: `PastDue` after failed payment webhook (stub webhook for MVP).
 
 ### SUB-003 — Enforcement middleware / filter
 - [ ] `SubscriptionStatusFilter` or middleware: block mutating verbs when `Cancelled` or `PastDue` (configurable allowlist: GET profile, POST billing portal).
