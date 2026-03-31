@@ -41,12 +41,12 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 ## Phase 1: Multi-Tenancy Implementation
 
 ### MT-001 — Domain model: `Company` (tenant)
-- [ ] Add `Company` entity: `Id`, `Name`, `Slug` (optional), `IsActive`, `CreatedAt`, audit fields.
-- [ ] Add optional fields for billing contact email, timezone (for later subscription UI).
+- [x] Add `Company` entity: `Id`, `Name`, `Slug` (optional), `IsActive`, `CreatedAt`, audit fields.
+- [x] Add optional fields for billing contact email, timezone (for later subscription UI).
 
 ### MT-002 — Wire `CompanyId` on business tables
-- [ ] Add nullable-then-backfill `CompanyId` (`uniqueidentifier`) to: `Customers`, `InstallationProjects`, `Elevators`, `InstallationStages`, `StageRequiredParts`, `StageTechnicians`, `TechnicianAssignments`, `InspectionRequests`, `Offers`, `Quotations`, `QuotationAttachments`, `Notifications`, `Categories`, `InventoryItems`, `Technicians`, `MaintenanceContracts`, `MaintenanceElevators`, `MaintenanceVisits`, `MaintenanceSparePartUsages`, `MaintenanceChecklistItems`, `MaintenanceVisitChecklistItems`, `FaultTickets`, `FaultSparePartUsages`, `EmergencyTickets`.
-- [ ] Confirm list against current `ApplicationDbContext` — add any new tables introduced since doc freeze.
+- [x] Add nullable-then-backfill `CompanyId` (`uniqueidentifier`) to: `Customers`, `InstallationProjects`, `Elevators`, `InstallationStages`, `StageRequiredParts`, `StageTechnicians`, `TechnicianAssignments`, `InspectionRequests`, `Offers`, `Quotations`, `QuotationAttachments`, `Notifications`, `Categories`, `InventoryItems`, `Technicians`, `MaintenanceContracts`, `MaintenanceElevators`, `MaintenanceVisits`, `MaintenanceSparePartUsages`, `MaintenanceChecklistItems`, `MaintenanceVisitChecklistItems`, `FaultTickets`, `FaultSparePartUsages`, `EmergencyTickets`.
+- [x] Confirm list against current `ApplicationDbContext` — add any new tables introduced since doc freeze.
 
 ### MT-003 — User–tenant relationship
 - [ ] Add `CompanyId` to `AppUser` **or** introduce `UserCompany` join table if multi-company users are in scope for MVP (pick one; default MVP: single `CompanyId` on user).
