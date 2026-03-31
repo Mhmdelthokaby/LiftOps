@@ -82,8 +82,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Override `SaveChanges` / `SaveChangesAsync` to assign `CompanyId` on insert from `ICurrentTenantService` when null (defense in depth).
 
 ### MT-011 — Files, PDFs, reports
-- [ ] Change storage paths from `{guid}/...` to `{companyId}/{...}/...` under `wwwroot` or blob container prefix.
-- [ ] Migration script: move existing files to default company prefix or lazy-migrate on first access.
+- [x] Change storage paths from `{guid}/...` to `{companyId}/{...}/...` under `wwwroot` or blob container prefix.
+- [x] Migration script: move existing files to default company prefix or lazy-migrate on first access.
 
 ### MT-012 — Background jobs (if any)
 - [ ] Pass explicit `CompanyId` into queued work items; no reliance on ambient HTTP context in workers.
