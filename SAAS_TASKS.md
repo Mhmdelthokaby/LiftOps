@@ -137,8 +137,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Job or synchronous check: `PastDue` after failed payment webhook (stub webhook for MVP).
 
 ### SUB-003 — Enforcement middleware / filter
-- [ ] `SubscriptionStatusFilter` or middleware: block mutating verbs when `Cancelled` or `PastDue` (configurable allowlist: GET profile, POST billing portal).
-- [ ] Return 402 or 403 with machine-readable code `subscription_inactive`.
+- [x] `SubscriptionStatusFilter` or middleware: block mutating verbs when `Cancelled` or `PastDue` (configurable allowlist: GET profile, POST billing portal).
+- [x] Return 402 or 403 with machine-readable code `subscription_inactive`.
 
 ### SUB-004 — Admin override
 - [ ] Platform super-admin role (not tenant Manager) can extend trial / set status — separate API under `/api/platform/...` with distinct auth.
