@@ -49,7 +49,7 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Confirm list against current `ApplicationDbContext` — add any new tables introduced since doc freeze.
 
 ### MT-003 — User–tenant relationship
-- [ ] Add `CompanyId` to `AppUser` **or** introduce `UserCompany` join table if multi-company users are in scope for MVP (pick one; default MVP: single `CompanyId` on user).
+- [x] Add `CompanyId` to `AppUser` **or** introduce `UserCompany` join table if multi-company users are in scope for MVP (pick one; default MVP: single `CompanyId` on user).
 
 ### MT-004 — EF Core configuration
 - [ ] Configure relationships and required `CompanyId` where appropriate after backfill.
