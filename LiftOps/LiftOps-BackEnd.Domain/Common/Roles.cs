@@ -9,6 +9,7 @@ public static class Roles
     public const string FinanceAdmin = "FinanceAdmin";
     public const string FaultsAdmin = "FaultsAdmin";
     public const string Technician = "Technician";
+    public const string PlatformAdmin = "PlatformAdmin";
 
     public static readonly IReadOnlyList<string> AllRoles = new[]
     {
@@ -18,6 +19,7 @@ public static class Roles
         InventoryAdmin,
         FinanceAdmin,
         FaultsAdmin,
-        Technician
+        Technician,
+        PlatformAdmin
     };
 }

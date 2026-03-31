@@ -141,7 +141,7 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Return 402 or 403 with machine-readable code `subscription_inactive`.
 
 ### SUB-004 — Admin override
-- [ ] Platform super-admin role (not tenant Manager) can extend trial / set status — separate API under `/api/platform/...` with distinct auth.
+- [x] Platform super-admin role (not tenant Manager) can extend trial / set status — separate API under `/api/platform/...` with distinct auth.
 
 ---
 

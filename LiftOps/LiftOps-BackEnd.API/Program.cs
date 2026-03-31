@@ -100,8 +100,9 @@ builder.Services.AddAuthentication(options =>
 
             var isAnonymous = endpoint.Metadata.GetMetadata<IAllowAnonymous>() != null;
             var isAuthorizedEndpoint = endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Count != 0;
+            var isPlatformRoute = context.HttpContext.Request.Path.StartsWithSegments("/api/platform", StringComparison.OrdinalIgnoreCase);
 
-            if (!isAnonymous && isAuthorizedEndpoint)
+            if (!isAnonymous && isAuthorizedEndpoint && !isPlatformRoute)
             {
                 var hasCompanyClaim = context.Principal?.HasClaim(c =>
                     c.Type == "company_id" && !string.IsNullOrWhiteSpace(c.Value)) == true;
@@ -152,6 +153,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("EmergencyManage", policy => policy
         .RequireRole(Roles.Manager, Roles.MaintenanceAdmin)
         .RequireAssertion(HasTenantClaim));
+    options.AddPolicy("RequirePlatformAdmin", policy => policy
+        .RequireRole(Roles.PlatformAdmin));
 });
 
 builder.Services.AddDataProtection();
