@@ -8,10 +8,14 @@ namespace LiftOps_BackEnd.Infrastructure.Services;
 public class CompanyProvisioningService : ICompanyProvisioningService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ISubscriptionLifecycleService _subscriptionLifecycleService;
 
-    public CompanyProvisioningService(ApplicationDbContext context)
+    public CompanyProvisioningService(
+        ApplicationDbContext context,
+        ISubscriptionLifecycleService subscriptionLifecycleService)
     {
         _context = context;
+        _subscriptionLifecycleService = subscriptionLifecycleService;
     }
 
     public async Task<Company?> GetActiveByIdAsync(Guid companyId, CancellationToken cancellationToken)
@@ -39,6 +43,7 @@ public class CompanyProvisioningService : ICompanyProvisioningService
 
         _context.Companies.Add(company);
         await _context.SaveChangesAsync(cancellationToken);
+        await _subscriptionLifecycleService.EnsureTrialSubscriptionAsync(company.Id, cancellationToken);
         return company;
     }
 }
