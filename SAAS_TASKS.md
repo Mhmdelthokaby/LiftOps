@@ -70,8 +70,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Update token validation to require `company_id` for all tenant-scoped endpoints.
 
 ### MT-008 — Global query filters
-- [ ] In `OnModelCreating`, apply `HasQueryFilter` for each tenant entity: `e => e.CompanyId == _currentTenant.CompanyId`.
-- [ ] Provide bypass mechanism for system jobs only (e.g. `IDbContextFactory` with explicit tenant id for worker).
+- [x] In `OnModelCreating`, apply `HasQueryFilter` for each tenant entity: `e => e.CompanyId == _currentTenant.CompanyId`.
+- [x] Provide bypass mechanism for system jobs only (e.g. `IDbContextFactory` with explicit tenant id for worker).
 
 ### MT-009 — Repository and handler refactor
 - [ ] Audit all `DbSet<T>.Where(...)` / raw SQL — ensure no unfiltered `Set<T>()` in handlers.

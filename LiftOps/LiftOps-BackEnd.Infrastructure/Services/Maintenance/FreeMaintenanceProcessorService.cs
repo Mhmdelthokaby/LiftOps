@@ -62,6 +62,7 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Maintenance
 
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            using var tenantBypass = context.UseSystemTenantBypass();
 
             try
             {
