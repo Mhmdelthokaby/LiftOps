@@ -121,6 +121,10 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .IsUnique()
             .HasFilter("[Slug] IS NOT NULL AND [Slug] <> ''");
 
+        // Company is the tenant root and should not reference another tenant.
+        modelBuilder.Entity<Company>()
+            .Ignore(c => c.CompanyId);
+
         modelBuilder.Entity<InstallationProject>()
            .Property(p => p.InstallationPricePerUnit)
            .HasPrecision(18, 2);
