@@ -11,6 +11,12 @@ public record AuthResponseDto(
     IList<string> Roles
 );
 
+public record AuthCommandResult(
+    AuthResponseDto? Auth,
+    string? ErrorCode = null,
+    string? ErrorMessage = null
+);
+
 public record LoginDto(string Email, string Password);
 
 public record RegisterAdminDto(

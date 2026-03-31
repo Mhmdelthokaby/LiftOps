@@ -7,9 +7,9 @@ using System.Security.Claims;
 
 namespace LiftOps_BackEnd.Application.Features.Admins.Commands.RefreshToken;
 
-public record RefreshTokenCommand(string Token, string RefreshToken) : IRequest<AuthResponseDto?>;
+public record RefreshTokenCommand(string Token, string RefreshToken) : IRequest<AuthCommandResult>;
 
-public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, AuthResponseDto?>
+public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, AuthCommandResult>
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly ITokenService _tokenService;
@@ -20,21 +20,26 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         _tokenService = tokenService;
     }
 
-    public async Task<AuthResponseDto?> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+    public async Task<AuthCommandResult> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
         var principal = _tokenService.GetPrincipalFromExpiredToken(request.Token);
         
-        if (principal == null) return null;
+        if (principal == null) return new AuthCommandResult(null, "invalid_token", "Invalid or expired token.");
 
         var email = principal.FindFirstValue(ClaimTypes.Email);
 
-        if (email == null) return null;
+        if (email == null) return new AuthCommandResult(null, "invalid_token", "Invalid or expired token.");
 
         var user = await _userManager.FindByEmailAsync(email);
 
         if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiry <= DateTime.UtcNow || user.IsDisabled)
         {
-            return null;
+            return new AuthCommandResult(null, "invalid_token", "Invalid or expired token.");
+        }
+
+        if (user.CompanyId == Guid.Empty)
+        {
+            return new AuthCommandResult(null, "company_membership_required", "User is not linked to a company yet.");
         }
 
         var roles = await _userManager.GetRolesAsync(user);
@@ -44,13 +49,13 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         user.RefreshToken = newRefreshToken;
         await _userManager.UpdateAsync(user);
 
-        return new AuthResponseDto(
+        return new AuthCommandResult(new AuthResponseDto(
             newToken,
             newRefreshToken,
             user.RefreshTokenExpiry.Value,
             user.FullName,
             user.Email!,
             roles
-        );
+        ));
     }
 }

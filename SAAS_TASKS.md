@@ -97,8 +97,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [ ] Enforce: first user of org = Owner/Manager; document role matrix per tenant.
 
 ### AUTH-002 — Login / refresh
-- [ ] Include `company_id` in access token; refresh token rotation re-issues same claims.
-- [ ] Handle user with no company (invite pending) — return 403 with structured error code.
+- [x] Include `company_id` in access token; refresh token rotation re-issues same claims.
+- [x] Handle user with no company (invite pending) — return 403 with structured error code.
 
 ### AUTH-003 — Policies
 - [ ] Update authorization policies to combine role + tenant context (e.g. `RequireManager` AND same company as resource).

@@ -30,16 +30,32 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
         var result = await _mediator.Send(new LoginAdminCommand(loginDto));
-        if (result == null) return Unauthorized(new { Message = "Invalid email or password, or account disabled." });
+        if (result.Auth == null)
+        {
+            if (result.ErrorCode == "company_membership_required")
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    code = result.ErrorCode,
+                    message = result.ErrorMessage
+                });
+            }
+
+            return Unauthorized(new
+            {
+                code = result.ErrorCode ?? "invalid_credentials",
+                message = result.ErrorMessage ?? "Invalid email or password, or account disabled."
+            });
+        }
         
         return Ok(new 
         {
-            result.Token,
-            result.RefreshToken,
-            result.RefreshTokenExpiry,
-            result.Name,
-            result.Email,
-            result.Roles
+            result.Auth.Token,
+            result.Auth.RefreshToken,
+            result.Auth.RefreshTokenExpiry,
+            result.Auth.Name,
+            result.Auth.Email,
+            result.Auth.Roles
         });
     }
 
@@ -48,8 +64,24 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         var result = await _mediator.Send(new RefreshTokenCommand(request.Token, request.RefreshToken));
-        if (result == null) return Unauthorized(new { Message = "Invalid or expired token." });
-        return Ok(result);
+        if (result.Auth == null)
+        {
+            if (result.ErrorCode == "company_membership_required")
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    code = result.ErrorCode,
+                    message = result.ErrorMessage
+                });
+            }
+
+            return Unauthorized(new
+            {
+                code = result.ErrorCode ?? "invalid_token",
+                message = result.ErrorMessage ?? "Invalid or expired token."
+            });
+        }
+        return Ok(result.Auth);
     }
 
     [HttpPost("register")]
