@@ -1,5 +1,6 @@
 using LiftOps_BackEnd.Application.Interfaces.Installation;
 using LiftOps_BackEnd.Application.Interfaces.Maintenance;
+using LiftOps_BackEnd.Application.Interfaces;
 using LiftOps_BackEnd.Application.DTOs.Installation;
 using LiftOps_BackEnd.Domain.Entities.Installation;
 using LiftOps_BackEnd.Domain.Entities;
@@ -31,6 +32,7 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Installation
         private readonly INotificationService _notificationService;
         private readonly ILogger<StageService> _logger;
         private readonly ICustomerStatusService _customerStatusService;
+        private readonly ICurrentTenantService _currentTenantService;
 
         public StageService(
             IInstallationStageRepository stageRepository,
@@ -44,7 +46,8 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Installation
             IGenericRepository<InventoryItem> inventoryRepository,
             INotificationService notificationService,
             ILogger<StageService> logger,
-            ICustomerStatusService customerStatusService)
+            ICustomerStatusService customerStatusService,
+            ICurrentTenantService currentTenantService)
         {
             _stageRepository = stageRepository;
             _requiredPartRepository = requiredPartRepository;
@@ -58,6 +61,7 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Installation
             _notificationService = notificationService;
             _logger = logger;
             _customerStatusService = customerStatusService;
+            _currentTenantService = currentTenantService;
         }
 
         public async Task StartStageAsync(Guid stageId, DateTime startDate)
@@ -605,6 +609,7 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Installation
 
         private async Task UpdateTechnicianOverallRatings(List<Guid> technicianIds)
         {
+            var tenantId = _currentTenantService.CompanyId;
             foreach (var techId in technicianIds)
             {
                 // Get all ratings for this technician from completed stages
@@ -617,19 +622,27 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Installation
                 {
                     var averageRating = ratingValues.Average();
                     var roundedRating = Math.Round(averageRating, 2);
-                    
-                    // Use direct SQL update to ensure the rating is saved
-                    await _context.Database.ExecuteSqlRawAsync(
-                        "UPDATE Technicians SET OverallRating = {0} WHERE Id = {1}",
-                        roundedRating,
-                        techId);
+
+                    // Use tenant-scoped update to avoid cross-tenant writes.
+                    if (tenantId.HasValue)
+                    {
+                        await _context.Database.ExecuteSqlRawAsync(
+                            "UPDATE Technicians SET OverallRating = {0} WHERE Id = {1} AND CompanyId = {2}",
+                            roundedRating,
+                            techId,
+                            tenantId.Value);
+                    }
                 }
                 else
                 {
-                    // If no ratings, set to NULL
-                    await _context.Database.ExecuteSqlRawAsync(
-                        "UPDATE Technicians SET OverallRating = NULL WHERE Id = {0}",
-                        techId);
+                    // If no ratings, set to NULL using tenant-scoped write.
+                    if (tenantId.HasValue)
+                    {
+                        await _context.Database.ExecuteSqlRawAsync(
+                            "UPDATE Technicians SET OverallRating = NULL WHERE Id = {0} AND CompanyId = {1}",
+                            techId,
+                            tenantId.Value);
+                    }
                 }
             }
         }
