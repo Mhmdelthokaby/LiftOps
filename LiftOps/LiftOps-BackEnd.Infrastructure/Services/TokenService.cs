@@ -29,6 +29,11 @@ public class TokenService : ITokenService
             new Claim(ClaimTypes.Name, user.FullName)
         };
 
+        if (user.CompanyId != Guid.Empty)
+        {
+            claims.Add(new Claim("company_id", user.CompanyId.ToString()));
+        }
+
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));

@@ -61,6 +61,7 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICurrentTenantService, CurrentTenantService>();
         services.AddScoped<ITokenService, TokenService>();
 
         // Installation Module Repositories
