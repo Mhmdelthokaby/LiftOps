@@ -129,8 +129,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 ## Phase 4: Subscription System (MVP)
 
 ### SUB-001 — Entities
-- [ ] `Subscription`: `Id`, `CompanyId`, `PlanId`, `Status` (Trial, Active, PastDue, Cancelled), `CurrentPeriodEnd`, `ExternalCustomerId` (nullable), audit.
-- [ ] `Plan`: `Id`, `Code` (basic, pro), `Name`, `MonthlyPrice`, feature flags JSON or columns.
+- [x] `Subscription`: `Id`, `CompanyId`, `PlanId`, `Status` (Trial, Active, PastDue, Cancelled), `CurrentPeriodEnd`, `ExternalCustomerId` (nullable), audit.
+- [x] `Plan`: `Id`, `Code` (basic, pro), `Name`, `MonthlyPrice`, feature flags JSON or columns.
 
 ### SUB-002 — Business rules
 - [ ] On create company: create `Subscription` with `Trial` and `CurrentPeriodEnd = UtcNow + trial days`.
