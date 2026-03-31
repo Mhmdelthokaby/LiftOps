@@ -93,8 +93,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 ## Phase 2: Authentication & Authorization Update
 
 ### AUTH-001 — Identity model
-- [ ] Extend registration (admin-only or public signup — product decision) to create or join a `Company`.
-- [ ] Enforce: first user of org = Owner/Manager; document role matrix per tenant.
+- [x] Extend registration (admin-only or public signup — product decision) to create or join a `Company`.
+- [x] Enforce: first user of org = Owner/Manager; document role matrix per tenant.
 
 ### AUTH-002 — Login / refresh
 - [ ] Include `company_id` in access token; refresh token rotation re-issues same claims.
