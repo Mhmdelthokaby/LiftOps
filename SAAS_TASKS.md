@@ -122,7 +122,7 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Verify no cross-tenant FK possibility (e.g. technician assigned to elevator in another company) — enforce in application layer + DB check constraints if needed.
 
 ### DB-004 — Connection resiliency
-- [ ] Enable retry on transient failures for SQL Server in EF Core for SaaS traffic patterns.
+- [x] Enable retry on transient failures for SQL Server in EF Core for SaaS traffic patterns.
 
 ---
 
