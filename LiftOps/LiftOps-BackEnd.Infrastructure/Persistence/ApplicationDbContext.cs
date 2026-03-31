@@ -108,13 +108,31 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
     // Emergency Module
     public DbSet<EmergencyTicket> EmergencyTickets { get; set; } = null!;
 
+    public override int SaveChanges()
+    {
+        ApplyAuditAndTenantStamp();
+        return base.SaveChanges();
+    }
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        ApplyAuditAndTenantStamp();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void ApplyAuditAndTenantStamp()
+    {
+        var tenantId = _currentTenantService.CompanyId;
+
         foreach (var entry in ChangeTracker.Entries<AppUser>())
         {
             switch (entry.State)
             {
                 case EntityState.Added:
+                    if (entry.Entity.CompanyId == Guid.Empty && tenantId.HasValue)
+                    {
+                        entry.Entity.CompanyId = tenantId.Value;
+                    }
                     entry.Entity.CreatedAt = DateTime.UtcNow;
                     entry.Entity.CreatedBy = _currentUserService.UserEmail;
                     break;
@@ -130,6 +148,10 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             switch (entry.State)
             {
                 case EntityState.Added:
+                    if (entry.Entity.CompanyId == Guid.Empty && tenantId.HasValue)
+                    {
+                        entry.Entity.CompanyId = tenantId.Value;
+                    }
                     entry.Entity.CreatedAt = DateTime.UtcNow;
                     entry.Entity.CreatedBy = _currentUserService.UserEmail;
                     break;
@@ -139,7 +161,6 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
                     break;
             }
         }
-        return base.SaveChangesAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
