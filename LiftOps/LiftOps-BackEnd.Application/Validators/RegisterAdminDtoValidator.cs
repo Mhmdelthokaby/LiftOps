@@ -19,5 +19,9 @@ public class RegisterAdminDtoValidator : AbstractValidator<RegisterAdminDto>
         RuleFor(x => x.Roles)
             .NotNull()
             .NotEmpty();
+
+        RuleFor(x => x)
+            .Must(x => x.CompanyId.HasValue || !string.IsNullOrWhiteSpace(x.CompanySlug) || !string.IsNullOrWhiteSpace(x.CompanyName))
+            .WithMessage("Provide one of CompanyId, CompanySlug, or CompanyName.");
     }
 }

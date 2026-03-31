@@ -18,7 +18,10 @@ public record RegisterAdminDto(
     string Email,
     string Phone,
     string Password,
-    List<string> Roles
+    List<string> Roles,
+    Guid? CompanyId = null,
+    string? CompanySlug = null,
+    string? CompanyName = null
 );
 
 public record UpdateAdminDto(
