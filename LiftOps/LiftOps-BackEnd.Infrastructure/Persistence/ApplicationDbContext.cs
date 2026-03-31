@@ -225,6 +225,15 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             modelBuilder.Entity(clrType)
                 .HasIndex("CompanyId");
 
+            modelBuilder.Entity(clrType)
+                .HasIndex("CompanyId", "CreatedAt");
+
+            if (entityType.FindProperty("Status") != null)
+            {
+                modelBuilder.Entity(clrType)
+                    .HasIndex("CompanyId", "Status");
+            }
+
             typeof(ApplicationDbContext)
                 .GetMethod(nameof(ApplyTenantQueryFilter), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
                 .MakeGenericMethod(clrType)
