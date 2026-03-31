@@ -111,12 +111,14 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
     public override int SaveChanges()
     {
         ApplyAuditAndTenantStamp();
+        ValidateCrossTenantReferences();
         return base.SaveChanges();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         ApplyAuditAndTenantStamp();
+        ValidateCrossTenantReferences();
         return base.SaveChangesAsync(cancellationToken);
     }
 
@@ -161,6 +163,86 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
                     break;
             }
         }
+    }
+
+    private void ValidateCrossTenantReferences()
+    {
+        ValidateTechnicianAssignments();
+        ValidateStageTechnicians();
+        ValidateMaintenanceElevators();
+    }
+
+    private void ValidateTechnicianAssignments()
+    {
+        var entries = ChangeTracker.Entries<TechnicianAssignment>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified)
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            var assignmentCompanyId = entry.Entity.CompanyId;
+            var technicianCompanyId = ResolveCompanyId<Technician>(entry.Entity.TechnicianId);
+            var elevatorCompanyId = ResolveCompanyId<Elevator>(entry.Entity.ElevatorId);
+
+            if (assignmentCompanyId != technicianCompanyId || assignmentCompanyId != elevatorCompanyId)
+            {
+                throw new InvalidOperationException("Cross-tenant technician assignment is not allowed.");
+            }
+        }
+    }
+
+    private void ValidateStageTechnicians()
+    {
+        var entries = ChangeTracker.Entries<StageTechnician>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified)
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            var assignmentCompanyId = entry.Entity.CompanyId;
+            var stageCompanyId = ResolveCompanyId<InstallationStage>(entry.Entity.StageId);
+            var technicianCompanyId = ResolveCompanyId<Technician>(entry.Entity.TechnicianId);
+
+            if (assignmentCompanyId != stageCompanyId || assignmentCompanyId != technicianCompanyId)
+            {
+                throw new InvalidOperationException("Cross-tenant stage technician assignment is not allowed.");
+            }
+        }
+    }
+
+    private void ValidateMaintenanceElevators()
+    {
+        var entries = ChangeTracker.Entries<MaintenanceElevator>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified)
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            var elevatorCompanyId = entry.Entity.CompanyId;
+            var contractCompanyId = ResolveCompanyId<MaintenanceContract>(entry.Entity.ContractId);
+
+            if (elevatorCompanyId != contractCompanyId)
+            {
+                throw new InvalidOperationException("Cross-tenant maintenance elevator link is not allowed.");
+            }
+        }
+    }
+
+    private Guid ResolveCompanyId<TEntity>(Guid id)
+        where TEntity : LiftOps_BackEnd.Domain.Common.BaseAuditableEntity
+    {
+        var tracked = ChangeTracker.Entries<TEntity>()
+            .FirstOrDefault(e => e.Entity.Id == id && e.State != EntityState.Deleted);
+        if (tracked != null)
+        {
+            return tracked.Entity.CompanyId;
+        }
+
+        return Set<TEntity>()
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => x.CompanyId)
+            .FirstOrDefault();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -225,6 +307,15 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             modelBuilder.Entity(clrType)
                 .HasIndex("CompanyId");
 
+            modelBuilder.Entity(clrType)
+                .HasIndex("CompanyId", "CreatedAt");
+
+            if (entityType.FindProperty("Status") != null)
+            {
+                modelBuilder.Entity(clrType)
+                    .HasIndex("CompanyId", "Status");
+            }
+
             typeof(ApplicationDbContext)
                 .GetMethod(nameof(ApplyTenantQueryFilter), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
                 .MakeGenericMethod(clrType)
@@ -267,11 +358,30 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .Property(v => v.Percentage)
             .HasPrecision(5, 2); // Percentage: 0.00 to 100.00
 
-        // Ensure ProjectNumber is unique
+        // Tenant-scoped unique natural keys.
         modelBuilder.Entity<InstallationProject>()
-            .HasIndex(p => p.ProjectNumber)
+            .HasIndex(p => new { p.CompanyId, p.ProjectNumber })
             .IsUnique()
             .HasFilter("[ProjectNumber] IS NOT NULL AND [ProjectNumber] <> ''");
+
+        modelBuilder.Entity<MaintenanceContract>()
+            .HasIndex(c => new { c.CompanyId, c.ProjectNumber })
+            .IsUnique()
+            .HasFilter("[ProjectNumber] IS NOT NULL AND [ProjectNumber] <> ''");
+
+        modelBuilder.Entity<FaultTicket>()
+            .HasIndex(f => new { f.CompanyId, f.TicketNumber })
+            .IsUnique()
+            .HasFilter("[TicketNumber] IS NOT NULL AND [TicketNumber] <> ''");
+
+        modelBuilder.Entity<EmergencyTicket>()
+            .HasIndex(e => new { e.CompanyId, e.TicketNumber })
+            .IsUnique();
+
+        modelBuilder.Entity<InventoryItem>()
+            .HasIndex(i => new { i.CompanyId, i.ItemNumber })
+            .IsUnique()
+            .HasFilter("[ItemNumber] IS NOT NULL AND [ItemNumber] <> ''");
 
         modelBuilder.Entity<InstallationStage>()
             .Property(s => s.SupplyCost)
