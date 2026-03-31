@@ -111,12 +111,14 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
     public override int SaveChanges()
     {
         ApplyAuditAndTenantStamp();
+        ValidateCrossTenantReferences();
         return base.SaveChanges();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         ApplyAuditAndTenantStamp();
+        ValidateCrossTenantReferences();
         return base.SaveChangesAsync(cancellationToken);
     }
 
@@ -161,6 +163,86 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
                     break;
             }
         }
+    }
+
+    private void ValidateCrossTenantReferences()
+    {
+        ValidateTechnicianAssignments();
+        ValidateStageTechnicians();
+        ValidateMaintenanceElevators();
+    }
+
+    private void ValidateTechnicianAssignments()
+    {
+        var entries = ChangeTracker.Entries<TechnicianAssignment>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified)
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            var assignmentCompanyId = entry.Entity.CompanyId;
+            var technicianCompanyId = ResolveCompanyId<Technician>(entry.Entity.TechnicianId);
+            var elevatorCompanyId = ResolveCompanyId<Elevator>(entry.Entity.ElevatorId);
+
+            if (assignmentCompanyId != technicianCompanyId || assignmentCompanyId != elevatorCompanyId)
+            {
+                throw new InvalidOperationException("Cross-tenant technician assignment is not allowed.");
+            }
+        }
+    }
+
+    private void ValidateStageTechnicians()
+    {
+        var entries = ChangeTracker.Entries<StageTechnician>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified)
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            var assignmentCompanyId = entry.Entity.CompanyId;
+            var stageCompanyId = ResolveCompanyId<InstallationStage>(entry.Entity.StageId);
+            var technicianCompanyId = ResolveCompanyId<Technician>(entry.Entity.TechnicianId);
+
+            if (assignmentCompanyId != stageCompanyId || assignmentCompanyId != technicianCompanyId)
+            {
+                throw new InvalidOperationException("Cross-tenant stage technician assignment is not allowed.");
+            }
+        }
+    }
+
+    private void ValidateMaintenanceElevators()
+    {
+        var entries = ChangeTracker.Entries<MaintenanceElevator>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified)
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            var elevatorCompanyId = entry.Entity.CompanyId;
+            var contractCompanyId = ResolveCompanyId<MaintenanceContract>(entry.Entity.ContractId);
+
+            if (elevatorCompanyId != contractCompanyId)
+            {
+                throw new InvalidOperationException("Cross-tenant maintenance elevator link is not allowed.");
+            }
+        }
+    }
+
+    private Guid ResolveCompanyId<TEntity>(Guid id)
+        where TEntity : LiftOps_BackEnd.Domain.Common.BaseAuditableEntity
+    {
+        var tracked = ChangeTracker.Entries<TEntity>()
+            .FirstOrDefault(e => e.Entity.Id == id && e.State != EntityState.Deleted);
+        if (tracked != null)
+        {
+            return tracked.Entity.CompanyId;
+        }
+
+        return Set<TEntity>()
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => x.CompanyId)
+            .FirstOrDefault();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
