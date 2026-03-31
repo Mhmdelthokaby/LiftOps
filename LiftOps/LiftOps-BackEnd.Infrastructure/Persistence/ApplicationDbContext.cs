@@ -13,13 +13,65 @@ namespace LiftOps_BackEnd.Infrastructure.Persistence;
 public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetCore.Identity.IdentityRole<Guid>, Guid>
 {
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICurrentTenantService _currentTenantService;
+    private bool _bypassTenantFilter;
+    private Guid? _overrideTenantId;
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ICurrentTenantService currentTenantService)
         : base(options)
     {
         _currentUserService = currentUserService;
+        _currentTenantService = currentTenantService;
+    }
+
+    private Guid? EffectiveTenantId => _overrideTenantId ?? _currentTenantService.CompanyId;
+    private bool BypassTenantFilter => _bypassTenantFilter;
+
+    public IDisposable UseSystemTenantBypass(Guid? explicitTenantId = null)
+    {
+        var previousBypass = _bypassTenantFilter;
+        var previousOverrideTenantId = _overrideTenantId;
+
+        _bypassTenantFilter = true;
+        _overrideTenantId = explicitTenantId;
+
+        return new TenantBypassScope(() =>
+        {
+            _bypassTenantFilter = previousBypass;
+            _overrideTenantId = previousOverrideTenantId;
+        });
+    }
+
+    private sealed class TenantBypassScope : IDisposable
+    {
+        private readonly Action _disposeAction;
+        private bool _disposed;
+
+        public TenantBypassScope(Action disposeAction)
+        {
+            _disposeAction = disposeAction;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposeAction();
+            _disposed = true;
+        }
+    }
+
+    private void ApplyTenantQueryFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : LiftOps_BackEnd.Domain.Common.BaseAuditableEntity
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasQueryFilter(e => BypassTenantFilter || (EffectiveTenantId.HasValue && e.CompanyId == EffectiveTenantId.Value));
     }
 
     public DbSet<InventoryItem> InventoryItems { get; set; } = null!;
@@ -151,6 +203,11 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
 
             modelBuilder.Entity(clrType)
                 .HasIndex("CompanyId");
+
+            typeof(ApplicationDbContext)
+                .GetMethod(nameof(ApplyTenantQueryFilter), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .MakeGenericMethod(clrType)
+                .Invoke(this, new object[] { modelBuilder });
         }
 
         modelBuilder.Entity<InstallationProject>()
