@@ -62,8 +62,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Dry-run on copy of production DB; measure downtime window.
 
 ### MT-006 — `ICurrentTenantService`
-- [ ] Interface: `Guid? CompanyId { get; }`, `bool IsResolved { get; }`, `string? Slug { get; }` (if slug routing).
-- [ ] Implementation reads from `HttpContext.User` claims after authentication.
+- [x] Interface: `Guid? CompanyId { get; }`, `bool IsResolved { get; }`, `string? Slug { get; }` (if slug routing).
+- [x] Implementation reads from `HttpContext.User` claims after authentication.
 
 ### MT-007 — JWT claims
 - [x] On login/refresh, emit `company_id` (and `company_slug` if used) as short-lived claims.
