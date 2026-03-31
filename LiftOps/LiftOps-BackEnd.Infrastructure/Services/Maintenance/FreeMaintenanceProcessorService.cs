@@ -62,97 +62,38 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Maintenance
 
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            using var tenantBypass = context.UseSystemTenantBypass();
 
             try
             {
-                // Get all active contracts with free months remaining
-                var contractsWithFreeMonths = await context.MaintenanceContracts
-                    .Where(c => c.Status == MaintenanceContractStatus.Active && c.FreeMonths > 0)
-                    .ToListAsync();
+                // Build explicit tenant work items so background execution does not rely on ambient HttpContext.
+                List<Guid> companyWorkItems;
+                using (context.UseSystemTenantBypass())
+                {
+                    companyWorkItems = await context.MaintenanceContracts
+                        .Where(c => c.Status == MaintenanceContractStatus.Active && c.FreeMonths > 0)
+                        .Select(c => c.CompanyId)
+                        .Distinct()
+                        .ToListAsync();
+                }
 
-                if (!contractsWithFreeMonths.Any())
+                if (!companyWorkItems.Any())
                 {
                     _logger.LogInformation("No contracts with free months found.");
                     return;
                 }
 
-                _logger.LogInformation("Found {Count} contracts with free months to process.", contractsWithFreeMonths.Count);
-
-                var currentDate = DateTime.UtcNow;
                 int processedCount = 0;
                 int expiredCount = 0;
 
-                foreach (var contract in contractsWithFreeMonths)
+                foreach (var companyId in companyWorkItems)
                 {
-                    try
-                    {
-                        // Calculate months elapsed since start date
-                        var monthsElapsed = CalculateMonthsElapsed(contract.StartDate, currentDate);
-                        var previousFreeMonths = contract.FreeMonths;
-                        
-                        // Check if free period has expired based on elapsed months
-                        if (monthsElapsed >= contract.FreeMonths)
-                        {
-                            // Free period expired - set to paid with default price
-                            contract.FreeMonths = 0;
-                            
-                            // Only set price if it's currently 0 (free)
-                            if (contract.PricePerMonth == 0)
-                            {
-                                contract.PricePerMonth = DEFAULT_PRICE_PER_MONTH;
-                                expiredCount++;
-                                _logger.LogInformation(
-                                    "Contract {ContractId} (Project: {ProjectNumber}) free period expired. Started: {StartDate} with {OriginalFreeMonths} free months, {MonthsElapsed} months elapsed. Set price to {Price}.",
-                                    contract.Id, 
-                                    contract.ProjectNumber, 
-                                    contract.StartDate.ToString("yyyy-MM-dd"),
-                                    previousFreeMonths,
-                                    monthsElapsed, 
-                                    DEFAULT_PRICE_PER_MONTH);
-                            }
-                        }
-                        else
-                        {
-                            // Update free months to reflect elapsed time
-                            // Calculate remaining: if monthsElapsed < FreeMonths, 
-                            // remaining should be FreeMonths - monthsElapsed
-                            // But to handle cases where service hasn't run for a while,
-                            // we calculate: remaining = max(0, FreeMonths - monthsElapsed)
-                            
-                            // However, if this is the first run and monthsElapsed > 0,
-                            // we need to catch up by setting FreeMonths to correct value
-                            var expectedRemaining = Math.Max(0, contract.FreeMonths - monthsElapsed);
-                            
-                            // Only update if the calculated remaining is different from current
-                            // This handles the case where service runs monthly and needs to catch up
-                            if (expectedRemaining < contract.FreeMonths)
-                            {
-                                contract.FreeMonths = expectedRemaining;
-                                
-                                _logger.LogInformation(
-                                    "Contract {ContractId} (Project: {ProjectNumber}) free months updated: {Previous} -> {Current} (Months elapsed: {Elapsed}).",
-                                    contract.Id, contract.ProjectNumber, previousFreeMonths, contract.FreeMonths, monthsElapsed);
-                            }
-                        }
-
-                        contract.LastModifiedAt = currentDate;
-                        contract.LastModifiedBy = "System"; // Background service
-                        processedCount++;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, 
-                            "Error processing contract {ContractId} (Project: {ProjectNumber})",
-                            contract.Id, contract.ProjectNumber);
-                        // Continue with next contract
-                    }
+                    var tenantResult = await ProcessCompanyContractsAsync(context, companyId);
+                    processedCount += tenantResult.ProcessedCount;
+                    expiredCount += tenantResult.ExpiredCount;
                 }
 
-                // Save all changes
                 if (processedCount > 0)
                 {
-                    await context.SaveChangesAsync();
                     _logger.LogInformation(
                         "Free maintenance processing completed. Processed: {Processed}, Expired: {Expired}",
                         processedCount, expiredCount);
@@ -163,6 +104,71 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Maintenance
                 _logger.LogError(ex, "Error occurred during free maintenance processing.");
                 throw;
             }
+        }
+
+        private async Task<(int ProcessedCount, int ExpiredCount)> ProcessCompanyContractsAsync(ApplicationDbContext context, Guid companyId)
+        {
+            using var tenantScope = context.UseSystemTenantBypass(companyId);
+
+            var contractsWithFreeMonths = await context.MaintenanceContracts
+                .Where(c => c.CompanyId == companyId && c.Status == MaintenanceContractStatus.Active && c.FreeMonths > 0)
+                .ToListAsync();
+
+            if (!contractsWithFreeMonths.Any())
+            {
+                return (0, 0);
+            }
+
+            var currentDate = DateTime.UtcNow;
+            var processedCount = 0;
+            var expiredCount = 0;
+
+            foreach (var contract in contractsWithFreeMonths)
+            {
+                try
+                {
+                    var monthsElapsed = CalculateMonthsElapsed(contract.StartDate, currentDate);
+                    var previousFreeMonths = contract.FreeMonths;
+
+                    if (monthsElapsed >= contract.FreeMonths)
+                    {
+                        contract.FreeMonths = 0;
+                        if (contract.PricePerMonth == 0)
+                        {
+                            contract.PricePerMonth = DEFAULT_PRICE_PER_MONTH;
+                            expiredCount++;
+                        }
+                    }
+                    else
+                    {
+                        var expectedRemaining = Math.Max(0, contract.FreeMonths - monthsElapsed);
+                        if (expectedRemaining < contract.FreeMonths)
+                        {
+                            contract.FreeMonths = expectedRemaining;
+                        }
+                    }
+
+                    contract.LastModifiedAt = currentDate;
+                    contract.LastModifiedBy = "System";
+                    processedCount++;
+
+                    _logger.LogInformation(
+                        "Tenant {CompanyId} contract {ContractId} adjusted. FreeMonths {Previous}->{Current}.",
+                        companyId, contract.Id, previousFreeMonths, contract.FreeMonths);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Error processing tenant {CompanyId} contract {ContractId} (Project: {ProjectNumber})",
+                        companyId,
+                        contract.Id,
+                        contract.ProjectNumber);
+                }
+            }
+
+            await context.SaveChangesAsync();
+            return (processedCount, expiredCount);
         }
 
         /// <summary>
