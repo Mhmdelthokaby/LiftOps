@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ICurrentTenantService, CurrentTenantService>();
         services.AddScoped<ICompanyProvisioningService, CompanyProvisioningService>();
+        services.AddScoped<ISubscriptionLifecycleService, SubscriptionLifecycleService>();
         services.AddScoped<ITokenService, TokenService>();
 
         // Installation Module Repositories
