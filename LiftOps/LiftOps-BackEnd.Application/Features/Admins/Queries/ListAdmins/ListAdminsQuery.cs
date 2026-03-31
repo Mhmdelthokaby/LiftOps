@@ -1,4 +1,5 @@
 using LiftOps_BackEnd.Application.Features.Admins.DTOs;
+using LiftOps_BackEnd.Application.Interfaces;
 using LiftOps_BackEnd.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -11,15 +12,25 @@ public record ListAdminsQuery() : IRequest<List<AdminListItemDto>>;
 public class ListAdminsQueryHandler : IRequestHandler<ListAdminsQuery, List<AdminListItemDto>>
 {
     private readonly UserManager<AppUser> _userManager;
+    private readonly ICurrentTenantService _currentTenantService;
 
-    public ListAdminsQueryHandler(UserManager<AppUser> userManager)
+    public ListAdminsQueryHandler(UserManager<AppUser> userManager, ICurrentTenantService currentTenantService)
     {
         _userManager = userManager;
+        _currentTenantService = currentTenantService;
     }
 
     public async Task<List<AdminListItemDto>> Handle(ListAdminsQuery request, CancellationToken cancellationToken)
     {
-        var users = await _userManager.Users.ToListAsync(cancellationToken);
+        if (!_currentTenantService.CompanyId.HasValue)
+        {
+            return new List<AdminListItemDto>();
+        }
+
+        var tenantId = _currentTenantService.CompanyId.Value;
+        var users = await _userManager.Users
+            .Where(u => u.CompanyId == tenantId)
+            .ToListAsync(cancellationToken);
         var list = new List<AdminListItemDto>();
 
         foreach (var user in users)

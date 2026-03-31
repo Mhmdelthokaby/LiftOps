@@ -105,7 +105,7 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [ ] Add `RequireFinance` usage or remove dead policy from `Program.cs` if unused.
 
 ### AUTH-004 — Resource-based checks
-- [ ] For `GET/PUT` by id, verify entity’s `CompanyId` matches JWT `company_id` before returning 200 (prevent ID enumeration across tenants).
+- [x] For `GET/PUT` by id, verify entity’s `CompanyId` matches JWT `company_id` before returning 200 (prevent ID enumeration across tenants).
 
 ---
 
