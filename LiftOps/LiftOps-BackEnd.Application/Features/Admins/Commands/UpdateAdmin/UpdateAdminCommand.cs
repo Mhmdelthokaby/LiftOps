@@ -1,4 +1,5 @@
 using LiftOps_BackEnd.Application.Features.Admins.DTOs;
+using LiftOps_BackEnd.Application.Interfaces;
 using LiftOps_BackEnd.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -10,16 +11,19 @@ public record UpdateAdminCommand(Guid Id, UpdateAdminDto UpdateDto) : IRequest<b
 public class UpdateAdminCommandHandler : IRequestHandler<UpdateAdminCommand, bool>
 {
     private readonly UserManager<AppUser> _userManager;
+    private readonly ICurrentTenantService _currentTenantService;
 
-    public UpdateAdminCommandHandler(UserManager<AppUser> userManager)
+    public UpdateAdminCommandHandler(UserManager<AppUser> userManager, ICurrentTenantService currentTenantService)
     {
         _userManager = userManager;
+        _currentTenantService = currentTenantService;
     }
 
     public async Task<bool> Handle(UpdateAdminCommand request, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(request.Id.ToString());
         if (user == null) return false;
+        if (!_currentTenantService.CompanyId.HasValue || user.CompanyId != _currentTenantService.CompanyId.Value) return false;
 
         user.FullName = request.UpdateDto.Name;
         user.Email = request.UpdateDto.Email;
