@@ -74,9 +74,9 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Provide bypass mechanism for system jobs only (e.g. `IDbContextFactory` with explicit tenant id for worker).
 
 ### MT-009 — Repository and handler refactor
-- [ ] Audit all `DbSet<T>.Where(...)` / raw SQL — ensure no unfiltered `Set<T>()` in handlers.
-- [ ] Replace any `ListAllAsync()` without tenant predicate.
-- [ ] Add code analyzer rule or PR checklist: new entities must register filter + `CompanyId`.
+- [x] Audit all `DbSet<T>.Where(...)` / raw SQL — ensure no unfiltered `Set<T>()` in handlers.
+- [x] Replace any `ListAllAsync()` without tenant predicate.
+- [x] Add code analyzer rule or PR checklist: new entities must register filter + `CompanyId`.
 
 ### MT-010 — SaveChanges tenant stamp
 - [ ] Override `SaveChanges` / `SaveChangesAsync` to assign `CompanyId` on insert from `ICurrentTenantService` when null (defense in depth).
