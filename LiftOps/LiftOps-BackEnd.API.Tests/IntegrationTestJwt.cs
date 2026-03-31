@@ -19,7 +19,8 @@ internal static class IntegrationTestJwt
         {
             new(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
             new(ClaimTypes.Email, "integration-test@example.com"),
-            new(ClaimTypes.Name, "Integration Test")
+            new(ClaimTypes.Name, "Integration Test"),
+            new("company_id", Guid.NewGuid().ToString())
         };
         foreach (var r in roles)
             claims.Add(new Claim(ClaimTypes.Role, r));

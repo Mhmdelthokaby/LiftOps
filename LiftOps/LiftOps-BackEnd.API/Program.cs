@@ -7,6 +7,7 @@ using LiftOps_BackEnd.Domain.Entities;
 using LiftOps_BackEnd.Infrastructure;
 using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -84,6 +85,34 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var endpoint = context.HttpContext.GetEndpoint();
+            if (endpoint == null)
+            {
+                return Task.CompletedTask;
+            }
+
+            var isAnonymous = endpoint.Metadata.GetMetadata<IAllowAnonymous>() != null;
+            var isAuthorizedEndpoint = endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Count != 0;
+
+            if (!isAnonymous && isAuthorizedEndpoint)
+            {
+                var hasCompanyClaim = context.Principal?.HasClaim(c =>
+                    c.Type == "company_id" && !string.IsNullOrWhiteSpace(c.Value)) == true;
+
+                if (!hasCompanyClaim)
+                {
+                    context.Fail("Missing required company_id claim.");
+                }
+            }
+
+            return Task.CompletedTask;
+        }
     };
 });
 
