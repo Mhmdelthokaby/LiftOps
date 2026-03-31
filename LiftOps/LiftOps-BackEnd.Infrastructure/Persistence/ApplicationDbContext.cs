@@ -267,11 +267,30 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .Property(v => v.Percentage)
             .HasPrecision(5, 2); // Percentage: 0.00 to 100.00
 
-        // Ensure ProjectNumber is unique
+        // Tenant-scoped unique natural keys.
         modelBuilder.Entity<InstallationProject>()
-            .HasIndex(p => p.ProjectNumber)
+            .HasIndex(p => new { p.CompanyId, p.ProjectNumber })
             .IsUnique()
             .HasFilter("[ProjectNumber] IS NOT NULL AND [ProjectNumber] <> ''");
+
+        modelBuilder.Entity<MaintenanceContract>()
+            .HasIndex(c => new { c.CompanyId, c.ProjectNumber })
+            .IsUnique()
+            .HasFilter("[ProjectNumber] IS NOT NULL AND [ProjectNumber] <> ''");
+
+        modelBuilder.Entity<FaultTicket>()
+            .HasIndex(f => new { f.CompanyId, f.TicketNumber })
+            .IsUnique()
+            .HasFilter("[TicketNumber] IS NOT NULL AND [TicketNumber] <> ''");
+
+        modelBuilder.Entity<EmergencyTicket>()
+            .HasIndex(e => new { e.CompanyId, e.TicketNumber })
+            .IsUnique();
+
+        modelBuilder.Entity<InventoryItem>()
+            .HasIndex(i => new { i.CompanyId, i.ItemNumber })
+            .IsUnique()
+            .HasFilter("[ItemNumber] IS NOT NULL AND [ItemNumber] <> ''");
 
         modelBuilder.Entity<InstallationStage>()
             .Property(s => s.SupplyCost)

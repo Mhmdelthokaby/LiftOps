@@ -112,8 +112,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 ## Phase 3: Database Refactoring
 
 ### DB-001 — Unique constraints
-- [ ] Drop global unique on `InstallationProjects.ProjectNumber`; add unique index on `(CompanyId, ProjectNumber)`.
-- [ ] Repeat for other natural keys (ticket numbers, inventory item numbers if globally unique today).
+- [x] Drop global unique on `InstallationProjects.ProjectNumber`; add unique index on `(CompanyId, ProjectNumber)`.
+- [x] Repeat for other natural keys (ticket numbers, inventory item numbers if globally unique today).
 
 ### DB-002 — Indexes
 - [ ] Add composite indexes: `(CompanyId, CreatedAt)`, `(CompanyId, Status)` on high-traffic tables per query plan review.
