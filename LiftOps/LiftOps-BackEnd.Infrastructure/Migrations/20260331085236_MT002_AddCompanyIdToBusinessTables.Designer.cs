@@ -4,6 +4,7 @@ using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LiftOps_BackEnd.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331085236_MT002_AddCompanyIdToBusinessTables")]
+    partial class MT002_AddCompanyIdToBusinessTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,9 +33,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -108,8 +108,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -127,7 +125,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -150,8 +148,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
 
                     b.ToTable("Categories");
                 });
@@ -212,7 +208,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid?>("AssignedTechnicianId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Contact")
@@ -276,8 +272,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasIndex("AssignedTechnicianId");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("EmergencyTickets");
                 });
 
@@ -287,7 +281,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -320,8 +314,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("FaultTicketId");
 
                     b.HasIndex("InventoryItemId");
@@ -338,7 +330,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid?>("AssignedTechnicianId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -402,8 +394,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasIndex("AssignedTechnicianId");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("FaultTickets");
                 });
 
@@ -421,7 +411,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -460,8 +450,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("Customers");
                 });
 
@@ -471,7 +459,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -540,8 +528,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Elevators");
@@ -568,7 +554,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("ConvertedToProjectId")
@@ -639,8 +625,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("ConvertedToProjectId")
                         .IsUnique()
                         .HasFilter("[ConvertedToProjectId] IS NOT NULL");
@@ -658,7 +642,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ContractDate")
@@ -750,8 +734,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("ProjectNumber")
@@ -767,7 +749,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -819,8 +801,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("ElevatorId");
 
                     b.ToTable("InstallationStages");
@@ -832,7 +812,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -866,8 +846,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("Notifications");
                 });
 
@@ -877,7 +855,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -920,8 +898,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("InspectionRequestId")
                         .IsUnique();
 
@@ -937,7 +913,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<string>("AttachmentPath")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -973,8 +949,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("ProjectId")
                         .IsUnique();
 
@@ -987,7 +961,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ContentType")
@@ -1022,8 +996,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("QuotationId");
 
                     b.ToTable("QuotationAttachments");
@@ -1035,7 +1007,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1064,8 +1036,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("InventoryItemId");
 
                     b.HasIndex("StageId");
@@ -1079,7 +1049,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1105,8 +1075,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("StageId");
 
                     b.HasIndex("TechnicianId");
@@ -1120,7 +1088,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1166,8 +1134,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("LeaderId");
 
                     b.ToTable("Technicians");
@@ -1187,7 +1153,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid>("AssignedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1210,8 +1176,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("TechnicianId", "ElevatorId");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("ElevatorId");
 
                     b.ToTable("TechnicianAssignments");
@@ -1230,7 +1194,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1271,8 +1235,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("InventoryItems");
                 });
 
@@ -1282,7 +1244,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1312,8 +1274,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("MaintenanceChecklistItems");
                 });
 
@@ -1327,7 +1287,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1385,8 +1345,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("TechnicianId");
@@ -1400,7 +1358,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ContractId")
@@ -1439,8 +1397,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("ContractId");
 
                     b.ToTable("MaintenanceElevators");
@@ -1452,7 +1408,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1485,8 +1441,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("InventoryItemId");
 
                     b.HasIndex("MaintenanceVisitId");
@@ -1500,7 +1454,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CompletedDate")
@@ -1544,8 +1498,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("MaintenanceElevatorId");
 
                     b.HasIndex("TechnicianId");
@@ -1562,7 +1514,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid>("ChecklistItemId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("Count")
@@ -1599,8 +1551,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ChecklistItemId");
-
-                    b.HasIndex("CompanyId");
 
                     b.HasIndex("VisitId");
 
@@ -1738,47 +1688,17 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.AppUser", b =>
-                {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Category", b =>
-                {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Emergency.EmergencyTicket", b =>
                 {
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Technician", "AssignedTechnician")
                         .WithMany()
                         .HasForeignKey("AssignedTechnicianId");
 
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("AssignedTechnician");
                 });
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Faults.FaultSparePartUsage", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Faults.FaultTicket", "FaultTicket")
                         .WithMany("SpareParts")
                         .HasForeignKey("FaultTicketId")
@@ -1802,32 +1722,11 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("AssignedTechnicianId");
 
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("AssignedTechnician");
-                });
-
-            modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.Customer", b =>
-                {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.Elevator", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InstallationProject", "Project")
                         .WithMany("Elevators")
                         .HasForeignKey("ProjectId")
@@ -1844,12 +1743,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InstallationProject", "ConvertedToProject")
                         .WithOne("ConvertedFromInspection")
                         .HasForeignKey("LiftOps_BackEnd.Domain.Entities.Installation.InspectionRequest", "ConvertedToProjectId")
@@ -1862,12 +1755,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.InstallationProject", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Customer", "Customer")
                         .WithMany("Projects")
                         .HasForeignKey("CustomerId")
@@ -1879,12 +1766,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.InstallationStage", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Elevator", "Elevator")
                         .WithMany("Stages")
                         .HasForeignKey("ElevatorId")
@@ -1894,23 +1775,8 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Navigation("Elevator");
                 });
 
-            modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.Notification", b =>
-                {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.Offer", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InspectionRequest", "InspectionRequest")
                         .WithOne("Offer")
                         .HasForeignKey("LiftOps_BackEnd.Domain.Entities.Installation.Offer", "InspectionRequestId")
@@ -1922,12 +1788,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.Quotation", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InstallationProject", "Project")
                         .WithOne("Quotation")
                         .HasForeignKey("LiftOps_BackEnd.Domain.Entities.Installation.Quotation", "ProjectId")
@@ -1939,12 +1799,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.QuotationAttachment", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Quotation", "Quotation")
                         .WithMany("Attachments")
                         .HasForeignKey("QuotationId")
@@ -1956,12 +1810,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.StageRequiredPart", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.InventoryItem", "InventoryItem")
                         .WithMany()
                         .HasForeignKey("InventoryItemId")
@@ -1981,12 +1829,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.StageTechnician", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InstallationStage", "Stage")
                         .WithMany("Technicians")
                         .HasForeignKey("StageId")
@@ -2006,12 +1848,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.Technician", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Technician", "Leader")
                         .WithMany("Subordinates")
                         .HasForeignKey("LeaderId")
@@ -2022,12 +1858,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.TechnicianAssignment", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Elevator", "Elevator")
                         .WithMany("TechnicianAssignments")
                         .HasForeignKey("ElevatorId")
@@ -2053,32 +1883,11 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceChecklistItem", b =>
-                {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceContract", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
@@ -2096,12 +1905,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceElevator", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceContract", "Contract")
                         .WithMany("Elevators")
                         .HasForeignKey("ContractId")
@@ -2113,12 +1916,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceSparePartUsage", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.InventoryItem", "InventoryItem")
                         .WithMany()
                         .HasForeignKey("InventoryItemId")
@@ -2138,12 +1935,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceVisit", b =>
                 {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceElevator", "MaintenanceElevator")
                         .WithMany()
                         .HasForeignKey("MaintenanceElevatorId")
@@ -2164,12 +1955,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceChecklistItem", "ChecklistItem")
                         .WithMany("VisitChecklistItems")
                         .HasForeignKey("ChecklistItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

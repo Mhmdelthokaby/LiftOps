@@ -4,6 +4,7 @@ using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LiftOps_BackEnd.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331090425_MT004_ConfigureCompanyRelationshipsAndFks")]
+    partial class MT004_ConfigureCompanyRelationshipsAndFks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,9 +33,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -108,8 +108,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -127,7 +125,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -212,7 +210,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid?>("AssignedTechnicianId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Contact")
@@ -287,7 +285,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -338,7 +336,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid?>("AssignedTechnicianId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -421,7 +419,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -471,7 +469,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -568,7 +566,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("ConvertedToProjectId")
@@ -658,7 +656,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ContractDate")
@@ -767,7 +765,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -832,7 +830,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -877,7 +875,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -937,7 +935,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<string>("AttachmentPath")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -987,7 +985,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ContentType")
@@ -1035,7 +1033,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1079,7 +1077,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1120,7 +1118,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1187,7 +1185,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid>("AssignedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1230,7 +1228,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1282,7 +1280,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1327,7 +1325,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1400,7 +1398,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ContractId")
@@ -1452,7 +1450,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1500,7 +1498,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CompletedDate")
@@ -1562,7 +1560,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.Property<Guid>("ChecklistItemId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("Count")
@@ -1738,22 +1736,12 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.AppUser", b =>
-                {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Category", b =>
                 {
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Emergency.EmergencyTicket", b =>
@@ -1765,8 +1753,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AssignedTechnician");
                 });
@@ -1776,8 +1763,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Faults.FaultTicket", "FaultTicket")
                         .WithMany("SpareParts")
@@ -1805,8 +1791,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AssignedTechnician");
                 });
@@ -1816,8 +1801,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.Elevator", b =>
@@ -1825,8 +1809,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InstallationProject", "Project")
                         .WithMany("Elevators")
@@ -1847,8 +1830,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InstallationProject", "ConvertedToProject")
                         .WithOne("ConvertedFromInspection")
@@ -1865,8 +1847,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Customer", "Customer")
                         .WithMany("Projects")
@@ -1882,8 +1863,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Elevator", "Elevator")
                         .WithMany("Stages")
@@ -1899,8 +1879,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Installation.Offer", b =>
@@ -1908,8 +1887,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InspectionRequest", "InspectionRequest")
                         .WithOne("Offer")
@@ -1925,8 +1903,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InstallationProject", "Project")
                         .WithOne("Quotation")
@@ -1942,8 +1919,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Quotation", "Quotation")
                         .WithMany("Attachments")
@@ -1959,8 +1935,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.InventoryItem", "InventoryItem")
                         .WithMany()
@@ -1984,8 +1959,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.InstallationStage", "Stage")
                         .WithMany("Technicians")
@@ -2009,8 +1983,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Technician", "Leader")
                         .WithMany("Subordinates")
@@ -2025,8 +1998,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Elevator", "Elevator")
                         .WithMany("TechnicianAssignments")
@@ -2056,8 +2028,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Category");
                 });
@@ -2067,8 +2038,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceContract", b =>
@@ -2076,8 +2046,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Installation.Customer", "Customer")
                         .WithMany()
@@ -2099,8 +2068,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceContract", "Contract")
                         .WithMany("Elevators")
@@ -2116,8 +2084,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.InventoryItem", "InventoryItem")
                         .WithMany()
@@ -2141,8 +2108,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceElevator", "MaintenanceElevator")
                         .WithMany()
@@ -2170,8 +2136,7 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("LiftOps_BackEnd.Domain.Entities.Maintenance.MaintenanceVisit", "Visit")
                         .WithMany("ChecklistItems")

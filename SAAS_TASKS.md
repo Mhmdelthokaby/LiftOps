@@ -41,52 +41,52 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 ## Phase 1: Multi-Tenancy Implementation
 
 ### MT-001 — Domain model: `Company` (tenant)
-- [ ] Add `Company` entity: `Id`, `Name`, `Slug` (optional), `IsActive`, `CreatedAt`, audit fields.
-- [ ] Add optional fields for billing contact email, timezone (for later subscription UI).
+- [x] Add `Company` entity: `Id`, `Name`, `Slug` (optional), `IsActive`, `CreatedAt`, audit fields.
+- [x] Add optional fields for billing contact email, timezone (for later subscription UI).
 
 ### MT-002 — Wire `CompanyId` on business tables
-- [ ] Add nullable-then-backfill `CompanyId` (`uniqueidentifier`) to: `Customers`, `InstallationProjects`, `Elevators`, `InstallationStages`, `StageRequiredParts`, `StageTechnicians`, `TechnicianAssignments`, `InspectionRequests`, `Offers`, `Quotations`, `QuotationAttachments`, `Notifications`, `Categories`, `InventoryItems`, `Technicians`, `MaintenanceContracts`, `MaintenanceElevators`, `MaintenanceVisits`, `MaintenanceSparePartUsages`, `MaintenanceChecklistItems`, `MaintenanceVisitChecklistItems`, `FaultTickets`, `FaultSparePartUsages`, `EmergencyTickets`.
-- [ ] Confirm list against current `ApplicationDbContext` — add any new tables introduced since doc freeze.
+- [x] Add nullable-then-backfill `CompanyId` (`uniqueidentifier`) to: `Customers`, `InstallationProjects`, `Elevators`, `InstallationStages`, `StageRequiredParts`, `StageTechnicians`, `TechnicianAssignments`, `InspectionRequests`, `Offers`, `Quotations`, `QuotationAttachments`, `Notifications`, `Categories`, `InventoryItems`, `Technicians`, `MaintenanceContracts`, `MaintenanceElevators`, `MaintenanceVisits`, `MaintenanceSparePartUsages`, `MaintenanceChecklistItems`, `MaintenanceVisitChecklistItems`, `FaultTickets`, `FaultSparePartUsages`, `EmergencyTickets`.
+- [x] Confirm list against current `ApplicationDbContext` — add any new tables introduced since doc freeze.
 
 ### MT-003 — User–tenant relationship
-- [ ] Add `CompanyId` to `AppUser` **or** introduce `UserCompany` join table if multi-company users are in scope for MVP (pick one; default MVP: single `CompanyId` on user).
+- [x] Add `CompanyId` to `AppUser` **or** introduce `UserCompany` join table if multi-company users are in scope for MVP (pick one; default MVP: single `CompanyId` on user).
 
 ### MT-004 — EF Core configuration
-- [ ] Configure relationships and required `CompanyId` where appropriate after backfill.
-- [ ] Add shadow property or explicit property consistency — no orphan rows.
+- [x] Configure relationships and required `CompanyId` where appropriate after backfill.
+- [x] Add shadow property or explicit property consistency — no orphan rows.
 
 ### MT-005 — Migration strategy for existing data
-- [ ] Script: insert default `Company` row (“Legacy” / “Default”).
-- [ ] Backfill all existing rows with `CompanyId = default company`.
-- [ ] Alter columns to `NOT NULL` after backfill.
-- [ ] Dry-run on copy of production DB; measure downtime window.
+- [x] Script: insert default `Company` row (“Legacy” / “Default”).
+- [x] Backfill all existing rows with `CompanyId = default company`.
+- [x] Alter columns to `NOT NULL` after backfill.
+- [x] Dry-run on copy of production DB; measure downtime window.
 
 ### MT-006 — `ICurrentTenantService`
-- [ ] Interface: `Guid? CompanyId { get; }`, `bool IsResolved { get; }`, `string? Slug { get; }` (if slug routing).
-- [ ] Implementation reads from `HttpContext.User` claims after authentication.
+- [x] Interface: `Guid? CompanyId { get; }`, `bool IsResolved { get; }`, `string? Slug { get; }` (if slug routing).
+- [x] Implementation reads from `HttpContext.User` claims after authentication.
 
 ### MT-007 — JWT claims
-- [ ] On login/refresh, emit `company_id` (and `company_slug` if used) as short-lived claims.
-- [ ] Update token validation to require `company_id` for all tenant-scoped endpoints.
+- [x] On login/refresh, emit `company_id` (and `company_slug` if used) as short-lived claims.
+- [x] Update token validation to require `company_id` for all tenant-scoped endpoints.
 
 ### MT-008 — Global query filters
-- [ ] In `OnModelCreating`, apply `HasQueryFilter` for each tenant entity: `e => e.CompanyId == _currentTenant.CompanyId`.
-- [ ] Provide bypass mechanism for system jobs only (e.g. `IDbContextFactory` with explicit tenant id for worker).
+- [x] In `OnModelCreating`, apply `HasQueryFilter` for each tenant entity: `e => e.CompanyId == _currentTenant.CompanyId`.
+- [x] Provide bypass mechanism for system jobs only (e.g. `IDbContextFactory` with explicit tenant id for worker).
 
 ### MT-009 — Repository and handler refactor
-- [ ] Audit all `DbSet<T>.Where(...)` / raw SQL — ensure no unfiltered `Set<T>()` in handlers.
-- [ ] Replace any `ListAllAsync()` without tenant predicate.
-- [ ] Add code analyzer rule or PR checklist: new entities must register filter + `CompanyId`.
+- [x] Audit all `DbSet<T>.Where(...)` / raw SQL — ensure no unfiltered `Set<T>()` in handlers.
+- [x] Replace any `ListAllAsync()` without tenant predicate.
+- [x] Add code analyzer rule or PR checklist: new entities must register filter + `CompanyId`.
 
 ### MT-010 — SaveChanges tenant stamp
-- [ ] Override `SaveChanges` / `SaveChangesAsync` to assign `CompanyId` on insert from `ICurrentTenantService` when null (defense in depth).
+- [x] Override `SaveChanges` / `SaveChangesAsync` to assign `CompanyId` on insert from `ICurrentTenantService` when null (defense in depth).
 
 ### MT-011 — Files, PDFs, reports
-- [ ] Change storage paths from `{guid}/...` to `{companyId}/{...}/...` under `wwwroot` or blob container prefix.
-- [ ] Migration script: move existing files to default company prefix or lazy-migrate on first access.
+- [x] Change storage paths from `{guid}/...` to `{companyId}/{...}/...` under `wwwroot` or blob container prefix.
+- [x] Migration script: move existing files to default company prefix or lazy-migrate on first access.
 
 ### MT-012 — Background jobs (if any)
-- [ ] Pass explicit `CompanyId` into queued work items; no reliance on ambient HTTP context in workers.
+- [x] Pass explicit `CompanyId` into queued work items; no reliance on ambient HTTP context in workers.
 
 ---
 

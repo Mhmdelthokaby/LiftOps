@@ -1,5 +1,6 @@
 using LiftOps_BackEnd.Application.DTOs.Installation;
 using LiftOps_BackEnd.Application.Common;
+using LiftOps_BackEnd.Application.Interfaces;
 using LiftOps_BackEnd.Domain.Entities.Installation;
 using LiftOps_BackEnd.Domain.Interfaces.Installation;
 using LiftOps_BackEnd.Domain.Interfaces;
@@ -21,15 +22,18 @@ namespace LiftOps_BackEnd.Application.Features.Installation.Commands
         private readonly IQuotationRepository _quotationRepository;
         private readonly IInstallationProjectRepository _projectRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentTenantService _currentTenantService;
 
         public CreateQuotationCommandHandler(
             IQuotationRepository quotationRepository,
             IInstallationProjectRepository projectRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            ICurrentTenantService currentTenantService)
         {
             _quotationRepository = quotationRepository;
             _projectRepository = projectRepository;
             _unitOfWork = unitOfWork;
+            _currentTenantService = currentTenantService;
         }
 
         public async Task<Result<Guid>> Handle(CreateQuotationCommand request, CancellationToken cancellationToken)
@@ -72,7 +76,7 @@ namespace LiftOps_BackEnd.Application.Features.Installation.Commands
                         quotation.Attachments.Add(new QuotationAttachment
                         {
                             FileName = attachmentDto.FileName,
-                            FilePath = attachmentDto.FilePath,
+                            FilePath = EnsureTenantScopedPath(attachmentDto.FilePath),
                             ContentType = attachmentDto.ContentType,
                             FileSize = attachmentDto.FileSize
                         });
@@ -93,6 +97,20 @@ namespace LiftOps_BackEnd.Application.Features.Installation.Commands
             {
                 return Result<Guid>.Failure($"Failed to create quotation: {ex.Message}");
             }
+        }
+
+        private string EnsureTenantScopedPath(string path)
+        {
+            var normalized = path.Replace('\\', '/').TrimStart('/');
+            if (_currentTenantService.CompanyId == null || _currentTenantService.CompanyId == Guid.Empty)
+            {
+                return normalized;
+            }
+
+            var tenantPrefix = _currentTenantService.CompanyId.Value.ToString();
+            return normalized.StartsWith($"{tenantPrefix}/", StringComparison.OrdinalIgnoreCase)
+                ? normalized
+                : $"{tenantPrefix}/{normalized}";
         }
     }
 }

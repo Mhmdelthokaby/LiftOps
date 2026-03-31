@@ -20,8 +20,12 @@ namespace LiftOps_BackEnd.Infrastructure.Services.Installation
 
         public async Task<string> GenerateStageReportAsync(InstallationStage stage)
         {
+            var companySegment = stage.CompanyId != Guid.Empty
+                ? stage.CompanyId.ToString()
+                : "00000000-0000-0000-0000-000000000000";
+
             // Ensure directory exists
-            var folderName = $"wwwroot/reports/{stage.Elevator.ProjectId}/{stage.ElevatorId}";
+            var folderName = $"wwwroot/reports/{companySegment}/{stage.Elevator.ProjectId}/{stage.ElevatorId}";
             var fileName = $"stage{stage.StageNumber}.pdf";
             var fullPath = Path.Combine(Directory.GetCurrentDirectory(), folderName);
             

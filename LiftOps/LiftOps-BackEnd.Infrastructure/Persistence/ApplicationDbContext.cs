@@ -13,17 +13,70 @@ namespace LiftOps_BackEnd.Infrastructure.Persistence;
 public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetCore.Identity.IdentityRole<Guid>, Guid>
 {
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICurrentTenantService _currentTenantService;
+    private bool _bypassTenantFilter;
+    private Guid? _overrideTenantId;
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ICurrentTenantService currentTenantService)
         : base(options)
     {
         _currentUserService = currentUserService;
+        _currentTenantService = currentTenantService;
+    }
+
+    private Guid? EffectiveTenantId => _overrideTenantId ?? _currentTenantService.CompanyId;
+    private bool BypassTenantFilter => _bypassTenantFilter;
+
+    public IDisposable UseSystemTenantBypass(Guid? explicitTenantId = null)
+    {
+        var previousBypass = _bypassTenantFilter;
+        var previousOverrideTenantId = _overrideTenantId;
+
+        _bypassTenantFilter = true;
+        _overrideTenantId = explicitTenantId;
+
+        return new TenantBypassScope(() =>
+        {
+            _bypassTenantFilter = previousBypass;
+            _overrideTenantId = previousOverrideTenantId;
+        });
+    }
+
+    private sealed class TenantBypassScope : IDisposable
+    {
+        private readonly Action _disposeAction;
+        private bool _disposed;
+
+        public TenantBypassScope(Action disposeAction)
+        {
+            _disposeAction = disposeAction;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposeAction();
+            _disposed = true;
+        }
+    }
+
+    private void ApplyTenantQueryFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : LiftOps_BackEnd.Domain.Common.BaseAuditableEntity
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasQueryFilter(e => BypassTenantFilter || (EffectiveTenantId.HasValue && e.CompanyId == EffectiveTenantId.Value));
     }
 
     public DbSet<InventoryItem> InventoryItems { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
+    public DbSet<Company> Companies { get; set; } = null!;
 
     // Installation Module
     public DbSet<Customer> Customers { get; set; } = null!;
@@ -55,13 +108,31 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
     // Emergency Module
     public DbSet<EmergencyTicket> EmergencyTickets { get; set; } = null!;
 
+    public override int SaveChanges()
+    {
+        ApplyAuditAndTenantStamp();
+        return base.SaveChanges();
+    }
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        ApplyAuditAndTenantStamp();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void ApplyAuditAndTenantStamp()
+    {
+        var tenantId = _currentTenantService.CompanyId;
+
         foreach (var entry in ChangeTracker.Entries<AppUser>())
         {
             switch (entry.State)
             {
                 case EntityState.Added:
+                    if (entry.Entity.CompanyId == Guid.Empty && tenantId.HasValue)
+                    {
+                        entry.Entity.CompanyId = tenantId.Value;
+                    }
                     entry.Entity.CreatedAt = DateTime.UtcNow;
                     entry.Entity.CreatedBy = _currentUserService.UserEmail;
                     break;
@@ -77,6 +148,10 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             switch (entry.State)
             {
                 case EntityState.Added:
+                    if (entry.Entity.CompanyId == Guid.Empty && tenantId.HasValue)
+                    {
+                        entry.Entity.CompanyId = tenantId.Value;
+                    }
                     entry.Entity.CreatedAt = DateTime.UtcNow;
                     entry.Entity.CreatedBy = _currentUserService.UserEmail;
                     break;
@@ -86,7 +161,6 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
                     break;
             }
         }
-        return base.SaveChangesAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -98,6 +172,64 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
         modelBuilder.Entity<InventoryItem>()
             .Property(i => i.UnitPrice)
             .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.Name)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.Slug)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.BillingContactEmail)
+            .HasMaxLength(256);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.Timezone)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Company>()
+            .HasIndex(c => c.Slug)
+            .IsUnique()
+            .HasFilter("[Slug] IS NOT NULL AND [Slug] <> ''");
+
+        // Company is the tenant root and should not reference another tenant.
+        modelBuilder.Entity<Company>()
+            .Ignore(c => c.CompanyId);
+
+        modelBuilder.Entity<AppUser>()
+            .HasIndex(u => u.CompanyId);
+
+        modelBuilder.Entity<AppUser>()
+            .HasOne<Company>()
+            .WithMany()
+            .HasForeignKey(u => u.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Apply tenant relationship consistently across all business entities.
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var clrType = entityType.ClrType;
+            if (!typeof(LiftOps_BackEnd.Domain.Common.BaseAuditableEntity).IsAssignableFrom(clrType) || clrType == typeof(Company))
+            {
+                continue;
+            }
+
+            modelBuilder.Entity(clrType)
+                .HasOne(typeof(Company))
+                .WithMany()
+                .HasForeignKey("CompanyId")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity(clrType)
+                .HasIndex("CompanyId");
+
+            typeof(ApplicationDbContext)
+                .GetMethod(nameof(ApplyTenantQueryFilter), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .MakeGenericMethod(clrType)
+                .Invoke(this, new object[] { modelBuilder });
+        }
 
         modelBuilder.Entity<InstallationProject>()
            .Property(p => p.InstallationPricePerUnit)

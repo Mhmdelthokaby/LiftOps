@@ -20,6 +20,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
 
     public virtual async Task<IReadOnlyList<T>> ListAllAsync()
     {
+        // Tenant scoping is applied by ApplicationDbContext global query filters.
         return await _context.Set<T>().ToListAsync();
     }
 
