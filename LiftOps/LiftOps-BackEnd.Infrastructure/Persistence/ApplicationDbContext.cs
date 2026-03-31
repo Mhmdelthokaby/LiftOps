@@ -132,7 +132,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .HasOne<Company>()
             .WithMany()
             .HasForeignKey(u => u.CompanyId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Apply tenant relationship consistently across all business entities.
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
