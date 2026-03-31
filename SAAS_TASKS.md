@@ -52,8 +52,8 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Add `CompanyId` to `AppUser` **or** introduce `UserCompany` join table if multi-company users are in scope for MVP (pick one; default MVP: single `CompanyId` on user).
 
 ### MT-004 — EF Core configuration
-- [ ] Configure relationships and required `CompanyId` where appropriate after backfill.
-- [ ] Add shadow property or explicit property consistency — no orphan rows.
+- [x] Configure relationships and required `CompanyId` where appropriate after backfill.
+- [x] Add shadow property or explicit property consistency — no orphan rows.
 
 ### MT-005 — Migration strategy for existing data
 - [ ] Script: insert default `Company` row (“Legacy” / “Default”).

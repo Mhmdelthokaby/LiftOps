@@ -134,6 +134,25 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .HasForeignKey(u => u.CompanyId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Apply tenant relationship consistently across all business entities.
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var clrType = entityType.ClrType;
+            if (!typeof(LiftOps_BackEnd.Domain.Common.BaseAuditableEntity).IsAssignableFrom(clrType) || clrType == typeof(Company))
+            {
+                continue;
+            }
+
+            modelBuilder.Entity(clrType)
+                .HasOne(typeof(Company))
+                .WithMany()
+                .HasForeignKey("CompanyId")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity(clrType)
+                .HasIndex("CompanyId");
+        }
+
         modelBuilder.Entity<InstallationProject>()
            .Property(p => p.InstallationPricePerUnit)
            .HasPrecision(18, 2);
