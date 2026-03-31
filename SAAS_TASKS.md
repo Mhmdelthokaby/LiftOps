@@ -56,10 +56,10 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [x] Add shadow property or explicit property consistency — no orphan rows.
 
 ### MT-005 — Migration strategy for existing data
-- [ ] Script: insert default `Company` row (“Legacy” / “Default”).
-- [ ] Backfill all existing rows with `CompanyId = default company`.
-- [ ] Alter columns to `NOT NULL` after backfill.
-- [ ] Dry-run on copy of production DB; measure downtime window.
+- [x] Script: insert default `Company` row (“Legacy” / “Default”).
+- [x] Backfill all existing rows with `CompanyId = default company`.
+- [x] Alter columns to `NOT NULL` after backfill.
+- [x] Dry-run on copy of production DB; measure downtime window.
 
 ### MT-006 — `ICurrentTenantService`
 - [ ] Interface: `Guid? CompanyId { get; }`, `bool IsResolved { get; }`, `string? Slug { get; }` (if slug routing).
