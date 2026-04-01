@@ -78,3 +78,11 @@ LiftOps provides:
 cd backend
 dotnet restore
 dotnet run
+
+## Documentation
+
+- Main docs index: `docs/README.md`
+- Project idea: `docs/PROJECT_IDEA.md`
+- Backend guide: `docs/BACKEND_GUIDE.md`
+- Frontend guide: `docs/FRONTEND_GUIDE.md`
+- SaaS backlog: `docs/SAAS_TASKS.md`
