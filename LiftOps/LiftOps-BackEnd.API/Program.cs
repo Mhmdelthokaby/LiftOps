@@ -273,8 +273,20 @@ app.Use(async (context, next) =>
         context.Response.ContentType = "application/json";
         await context.Response.WriteAsJsonAsync(new
         {
+            code = "validation_failed",
             message = "Validation failed",
-            errors = ex.Errors.Select(e => e.ErrorMessage).ToArray()
+            details = ex.Errors.Select(e => e.ErrorMessage).ToArray()
+        });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            code = "internal_server_error",
+            message = "An unexpected error occurred.",
+            details = app.Environment.IsDevelopment() ? ex.Message : null
         });
     }
 });
