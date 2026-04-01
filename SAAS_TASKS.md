@@ -148,7 +148,7 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 ## Phase 5: API Refactoring
 
 ### API-001 — Tenant audit sweep
-- [ ] Per controller, verify MediatR pipeline receives tenant context; add integration tests that two tenants cannot read each other’s IDs.
+- [x] Per controller, verify MediatR pipeline receives tenant context; add integration tests that two tenants cannot read each other’s IDs.
 
 ### API-002 — Response consistency
 - [ ] Standardize error envelope: `{ code, message, details? }` for 4xx/5xx from API layer.

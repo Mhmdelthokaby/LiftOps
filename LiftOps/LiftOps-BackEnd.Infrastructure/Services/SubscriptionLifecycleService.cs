@@ -2,6 +2,7 @@ using LiftOps_BackEnd.Application.Interfaces;
 using LiftOps_BackEnd.Domain.Entities.Subscription;
 using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace LiftOps_BackEnd.Infrastructure.Services;
 
