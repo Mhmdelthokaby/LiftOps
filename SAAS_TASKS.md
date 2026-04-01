@@ -155,7 +155,7 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [ ] Ensure no stack traces in production responses.
 
 ### API-003 — Pagination and sorting
-- [ ] All list endpoints: require explicit `page`, `pageSize`, sort; default sort includes `CompanyId` in index-friendly order.
+- [x] All list endpoints: require explicit `page`, `pageSize`, sort; default sort includes `CompanyId` in index-friendly order.
 
 ### API-004 — Rate limiting
 - [ ] Per-tenant rate limits on auth and expensive endpoints (optional MVP: per-IP if easier).

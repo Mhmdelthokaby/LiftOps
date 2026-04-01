@@ -7,6 +7,7 @@ using LiftOps_BackEnd.Application.Features.Admins.Commands.UpdateAdmin;
 using LiftOps_BackEnd.Application.Features.Admins.DTOs;
 using LiftOps_BackEnd.Application.Features.Admins.Queries.ListAdmins;
 using LiftOps_BackEnd.Application.Common;
+using LiftOps_BackEnd.API.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -98,10 +99,20 @@ public class AdminController : ControllerBase
 
     [HttpGet("list")]
     [Authorize(Roles = Roles.Manager)]
-    public async Task<IActionResult> List()
+    public async Task<IActionResult> List([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? sort)
     {
+        if (!PaginationExtensions.TryNormalize(new PageRequest(page, pageSize, sort), out var p, out var ps, out var s, out var error))
+        {
+            return BadRequest(new { code = "invalid_pagination", message = error });
+        }
+
         var result = await _mediator.Send(new ListAdminsQuery());
-        return Ok(result);
+        var ordered = s.Equals("name_desc", StringComparison.OrdinalIgnoreCase)
+            ? result.OrderByDescending(x => x.Name)
+            : result.OrderBy(x => x.Name);
+        var items = ordered.ApplyPaging(p, ps);
+
+        return Ok(new PagedResponse<AdminListItemDto>(p, ps, result.Count, s, items));
     }
 
     [HttpPut("update/{id}")]
