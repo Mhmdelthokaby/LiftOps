@@ -5,6 +5,7 @@ using LiftOps_BackEnd.Application.Features.Maintenance.Queries.ListChecklistItem
 using LiftOps_BackEnd.Application.Features.Technicians.Commands;
 using LiftOps_BackEnd.Application.Features.Technicians.Queries;
 using LiftOps_BackEnd.Application.Features.Emergency.Queries;
+using LiftOps_BackEnd.API.Common;
 using LiftOps_BackEnd.Application.DTOs.Installation;
 using LiftOps_BackEnd.Application.Interfaces;
 using LiftOps_BackEnd.Application.Interfaces.Maintenance;
@@ -165,20 +166,40 @@ namespace LiftOps_BackEnd.API.Controllers
 
         [HttpGet("all")]
         [Authorize(Roles = Roles.Manager)]
-        public async Task<IActionResult> GetAllTechnicians()
+        public async Task<IActionResult> GetAllTechnicians([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? sort)
         {
+            if (!PaginationExtensions.TryNormalize(new PageRequest(page, pageSize, sort), out var p, out var ps, out var s, out var error))
+            {
+                return BadRequest(new { code = "invalid_pagination", message = error });
+            }
+
             var result = await _mediator.Send(new GetAllTechniciansQuery());
             if (!result.Succeeded) return BadRequest(result);
-            return Ok(result);
+            var data = result.Data ?? new List<TechnicianDto>();
+            var ordered = s.Equals("name_desc", StringComparison.OrdinalIgnoreCase)
+                ? data.OrderByDescending(x => x.Name)
+                : data.OrderBy(x => x.Name);
+            var items = ordered.ApplyPaging(p, ps);
+            return Ok(new PagedResponse<TechnicianDto>(p, ps, data.Count, s, items));
         }
 
         [HttpGet("available")]
         [Authorize(Roles = Roles.Manager + "," + Roles.InstallationAdmin)]
-        public async Task<IActionResult> GetAvailableTechnicians()
+        public async Task<IActionResult> GetAvailableTechnicians([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? sort)
         {
+            if (!PaginationExtensions.TryNormalize(new PageRequest(page, pageSize, sort), out var p, out var ps, out var s, out var error))
+            {
+                return BadRequest(new { code = "invalid_pagination", message = error });
+            }
+
             var result = await _mediator.Send(new GetAvailableTechniciansQuery());
             if (!result.Succeeded) return BadRequest(result);
-            return Ok(result);
+            var data = result.Data ?? new List<TechnicianDto>();
+            var ordered = s.Equals("name_desc", StringComparison.OrdinalIgnoreCase)
+                ? data.OrderByDescending(x => x.Name)
+                : data.OrderBy(x => x.Name);
+            var items = ordered.ApplyPaging(p, ps);
+            return Ok(new PagedResponse<TechnicianDto>(p, ps, data.Count, s, items));
         }
 
         [HttpPost("add")]

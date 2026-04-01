@@ -5,6 +5,7 @@ using LiftOps_BackEnd.Application.Features.Inventory.Commands.UpdateInventoryIte
 using LiftOps_BackEnd.Application.Features.Inventory.Queries.GetActiveInventoryItems;
 using LiftOps_BackEnd.Application.Features.Inventory.Queries.GetAllInventoryItems;
 using LiftOps_BackEnd.Application.Features.Inventory.Queries.GetInventoryTotalValue;
+using LiftOps_BackEnd.API.Common;
 using LiftOps_BackEnd.Domain.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -52,18 +53,36 @@ public class InventoryController : ControllerBase
 
     [HttpGet("all")]
     [Authorize(Roles = Roles.Manager + "," + Roles.InventoryAdmin)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? sort)
     {
+        if (!PaginationExtensions.TryNormalize(new PageRequest(page, pageSize, sort), out var p, out var ps, out var s, out var error))
+        {
+            return BadRequest(new { code = "invalid_pagination", message = error });
+        }
+
         var result = await _mediator.Send(new GetAllInventoryItemsQuery());
-        return Ok(result);
+        var ordered = s.Equals("createdAt_desc", StringComparison.OrdinalIgnoreCase)
+            ? result.OrderByDescending(x => x.CreatedAt)
+            : result.OrderBy(x => x.CreatedAt);
+        var items = ordered.ApplyPaging(p, ps);
+        return Ok(new PagedResponse<InventoryItemDto>(p, ps, result.Count, s, items));
     }
 
     [HttpGet("active")]
     [Authorize(Roles = Roles.Manager + "," + Roles.InventoryAdmin + "," + Roles.InstallationAdmin + "," + Roles.MaintenanceAdmin)]
-    public async Task<IActionResult> GetActive()
+    public async Task<IActionResult> GetActive([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? sort)
     {
+        if (!PaginationExtensions.TryNormalize(new PageRequest(page, pageSize, sort), out var p, out var ps, out var s, out var error))
+        {
+            return BadRequest(new { code = "invalid_pagination", message = error });
+        }
+
         var result = await _mediator.Send(new GetActiveInventoryItemsQuery());
-        return Ok(result);
+        var ordered = s.Equals("createdAt_desc", StringComparison.OrdinalIgnoreCase)
+            ? result.OrderByDescending(x => x.CreatedAt)
+            : result.OrderBy(x => x.CreatedAt);
+        var items = ordered.ApplyPaging(p, ps);
+        return Ok(new PagedResponse<InventoryItemDto>(p, ps, result.Count, s, items));
     }
 
     [HttpGet("value")]
