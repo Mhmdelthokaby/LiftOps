@@ -12,6 +12,9 @@ internal static class IntegrationTestJwt
     internal const string TestKey = "#fevbgflvmfLift#223ffOps#omwsdaSecretKetgdhvkeovnw#sfavdtctwqadvoplmnyv";
 
     public static string CreateAccessToken(params string[] roles)
+        => CreateAccessToken(Guid.NewGuid(), roles);
+
+    public static string CreateAccessToken(Guid companyId, params string[] roles)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -20,7 +23,7 @@ internal static class IntegrationTestJwt
             new(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
             new(ClaimTypes.Email, "integration-test@example.com"),
             new(ClaimTypes.Name, "Integration Test"),
-            new("company_id", Guid.NewGuid().ToString())
+            new("company_id", companyId.ToString())
         };
         foreach (var r in roles)
             claims.Add(new Claim(ClaimTypes.Role, r));
