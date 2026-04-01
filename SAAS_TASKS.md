@@ -158,7 +158,7 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 - [ ] All list endpoints: require explicit `page`, `pageSize`, sort; default sort includes `CompanyId` in index-friendly order.
 
 ### API-004 — Rate limiting
-- [ ] Per-tenant rate limits on auth and expensive endpoints (optional MVP: per-IP if easier).
+- [x] Per-tenant rate limits on auth and expensive endpoints (optional MVP: per-IP if easier).
 
 ---
 
