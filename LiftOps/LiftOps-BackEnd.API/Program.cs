@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Net;
 using System.Linq;
 using System.Net.Http.Json;
+using System.Threading.RateLimiting;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -158,6 +159,48 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddDataProtection();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, _) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            code = "rate_limited",
+            message = "Too many requests for this tenant. Please retry shortly."
+        });
+    };
+
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        var path = httpContext.Request.Path.Value ?? string.Empty;
+        var isAuthEndpoint = path.StartsWith("/api/Admin/login", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/api/Admin/refresh-token", StringComparison.OrdinalIgnoreCase);
+        var isExpensiveEndpoint = path.Contains("/pdf", StringComparison.OrdinalIgnoreCase)
+            || path.EndsWith("/statistics", StringComparison.OrdinalIgnoreCase)
+            || path.Contains("/dashboard", StringComparison.OrdinalIgnoreCase);
+
+        var scope = isAuthEndpoint ? "auth" : isExpensiveEndpoint ? "expensive" : "general";
+        var tenantOrIp = httpContext.User.FindFirst("company_id")?.Value
+            ?? httpContext.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown";
+        var partitionKey = $"{scope}:{tenantOrIp}";
+
+        var permitLimit = isAuthEndpoint ? 15 : isExpensiveEndpoint ? 30 : 120;
+        var queueLimit = isAuthEndpoint ? 2 : 5;
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = permitLimit,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = queueLimit
+            });
+    });
+});
 builder.Services.Configure<MaintenancePdfOptions>(builder.Configuration.GetSection(MaintenancePdfOptions.SectionName));
 builder.Services.AddScoped<MaintenanceVisitPdfAccessService>();
 builder.Services.AddScoped<DevelopmentOnlyFilter>();
@@ -260,6 +303,7 @@ if (forwardedHeadersEnabled)
 }
 
 app.UseCors("AllowFrontend");
+app.UseRateLimiter();
 
 app.Use(async (context, next) =>
 {
@@ -273,8 +317,20 @@ app.Use(async (context, next) =>
         context.Response.ContentType = "application/json";
         await context.Response.WriteAsJsonAsync(new
         {
+            code = "validation_failed",
             message = "Validation failed",
-            errors = ex.Errors.Select(e => e.ErrorMessage).ToArray()
+            details = ex.Errors.Select(e => e.ErrorMessage).ToArray()
+        });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            code = "internal_server_error",
+            message = "An unexpected error occurred.",
+            details = app.Environment.IsDevelopment() ? ex.Message : null
         });
     }
 });
