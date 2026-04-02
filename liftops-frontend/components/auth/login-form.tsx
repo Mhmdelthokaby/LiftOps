@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { Loader2, Eye, EyeOff } from "lucide-react"
 import { loginSchema, type LoginFormData, loginAdmin, saveAuthDocs } from "@/lib/auth"
+import { getPostLoginRedirectPath } from "@/lib/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,19 +32,7 @@ export function LoginForm() {
             const result = await loginAdmin(data)
             saveAuthDocs(result)
 
-            const getRedirectPath = (roles: string[]) => {
-                // Manager can access everything, redirect to dashboard
-                if (roles.includes("Manager")) return "/"
-                // If user has multiple roles, prioritize by role hierarchy
-                if (roles.includes("InstallationAdmin")) return "/installation"
-                if (roles.includes("MaintenanceAdmin")) return "/maintenance?view=projects"
-                if (roles.includes("InventoryAdmin")) return "/inventory"
-                if (roles.includes("FinanceAdmin")) return "/finance"
-                if (roles.includes("FaultsAdmin")) return "/emergency"
-                return "/"
-            }
-
-            const redirectPath = getRedirectPath(result.roles)
+            const redirectPath = getPostLoginRedirectPath(result.roles)
             
             toast({
                 title: "Login Successful",

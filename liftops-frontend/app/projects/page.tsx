@@ -34,7 +34,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     // Check if user can view projects
     if (!canViewProjects()) {
-      router.push('/')
+      router.push("/dashboard")
       return
     }
     fetchProjects()

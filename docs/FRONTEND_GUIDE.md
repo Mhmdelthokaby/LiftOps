@@ -26,9 +26,12 @@ This guide describes the LiftOps frontend structure, route layout, roles, and im
 
 ## Frontend Routes
 
+Public marketing site (no login): `/`, `/home` (redirects to `/`), `/about`, `/pricing`, `/contact`. Authenticated app home: `/dashboard`. See `docs/LANDING_MIGRATION_TASKS.md` for the landing migration checklist.
+
 Primary pages currently under `app/`:
 
-- `/` dashboard
+- `/` marketing home
+- `/dashboard` dashboard
 - `/login`
 - `/settings`
 - `/clients`
@@ -73,7 +76,7 @@ Sidebar items are managed in `components/app-sidebar.tsx` and filtered by role:
 When access is denied, `AuthGuard` redirects users based on role priority:
 
 - `Technician` -> `/technician/visits`
-- `Manager` -> `/`
+- `Manager` -> `/dashboard`
 - `InstallationAdmin` -> `/installation`
 - `MaintenanceAdmin` -> `/maintenance?view=projects`
 - `InventoryAdmin` -> `/inventory`

@@ -56,7 +56,7 @@ const navItems: Array<{
     {
       title: "Dashboard",
       icon: LayoutDashboard,
-      href: "/",
+      href: "/dashboard",
       canAccess: () => !isTechnician(), // Technicians cannot see dashboard
     },
     {
@@ -159,8 +159,8 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={
-                      pathname === item.href || 
-                      (item.href === "/technicians" && pathname?.startsWith("/technicians")) || 
+                      pathname === item.href ||
+                      (item.href === "/technicians" && pathname?.startsWith("/technicians")) ||
                       (item.href === "/maintenance?view=projects" && pathname === "/maintenance" && searchParams?.get("view") === "projects")
                     }>
                       <Link href={item.href}>
