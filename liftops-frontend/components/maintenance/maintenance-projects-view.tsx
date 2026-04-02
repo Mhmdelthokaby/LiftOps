@@ -50,7 +50,7 @@ export function MaintenanceProjectsView() {
 
   useEffect(() => {
     if (!canViewMaintenance()) {
-      router.push('/')
+      router.push("/dashboard")
       return
     }
     fetchProjects()

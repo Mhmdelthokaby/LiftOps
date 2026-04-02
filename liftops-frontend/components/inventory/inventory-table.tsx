@@ -44,7 +44,7 @@ export function InventoryTable({ onRefreshReady }: InventoryTableProps) {
 
   useEffect(() => {
     if (!canView) {
-      router.push("/")
+      router.push("/dashboard")
       return
     }
     fetchItems()

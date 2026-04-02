@@ -47,7 +47,7 @@ export default function MaintenanceElevatorsPage() {
 
   useEffect(() => {
     if (!canViewMaintenance()) {
-      router.push('/')
+      router.push("/dashboard")
       return
     }
     fetchElevators()

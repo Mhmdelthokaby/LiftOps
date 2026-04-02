@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Public routes that don't require authentication
-const publicRoutes = ['/login']
+// Documented public paths (client-side AuthGuard enforces; localStorage is not available here)
+const publicRoutes = ["/", "/home", "/about", "/pricing", "/contact", "/login"]
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl

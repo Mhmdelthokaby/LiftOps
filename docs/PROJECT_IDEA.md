@@ -40,5 +40,6 @@ LiftOps is a multi-tenant SaaS platform for elevator companies to run installati
 
 - Backend implementation guide: `docs/BACKEND_GUIDE.md`
 - Frontend implementation guide: `docs/FRONTEND_GUIDE.md`
+- Landing site migration checklist: `docs/LANDING_MIGRATION_TASKS.md`
 - SaaS task backlog: `docs/SAAS_TASKS.md`
 

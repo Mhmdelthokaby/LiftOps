@@ -28,7 +28,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     if (!canView) {
-      router.push("/")
+      router.push("/dashboard")
     }
   }, [canView, router])
 

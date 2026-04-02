@@ -14,55 +14,52 @@ import { canViewDashboard } from "@/lib/user"
 import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter()
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [loading, setLoading] = useState(true)
   const [emergencyStats, setEmergencyStats] = useState({
     open: 0,
     enRoute: 0,
     inProgress: 0,
     resolved: 0,
-  });
+  })
 
   useEffect(() => {
-    // Redirect technicians to their visits page
     if (!canViewDashboard()) {
-      router.push('/technician/visits');
-      return;
+      router.push("/technician/visits")
+      return
     }
     async function fetchSummary() {
       try {
-        const data = await getDashboardSummary();
-        setSummary(data);
-      } catch (error: any) {
-        console.error("Failed to load dashboard summary", error);
-        // If unauthorized, the auth guard will handle redirect
-        if (error?.status === 401) {
-          // Auth guard will redirect, just stop loading
-          return;
+        const data = await getDashboardSummary()
+        setSummary(data)
+      } catch (error: unknown) {
+        console.error("Failed to load dashboard summary", error)
+        if (error && typeof error === "object" && "status" in error && (error as { status?: number }).status === 401) {
+          return
         }
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    
+
     async function fetchEmergencyStats() {
       try {
-        const tickets = await getEmergencyTickets();
+        const tickets = await getEmergencyTickets()
         setEmergencyStats({
-          open: tickets.filter(t => t.status === "Open").length,
-          enRoute: tickets.filter(t => t.status === "EnRoute").length,
-          inProgress: tickets.filter(t => t.status === "InProgress").length,
-          resolved: tickets.filter(t => t.status === "Resolved").length,
-        });
+          open: tickets.filter((t) => t.status === "Open").length,
+          enRoute: tickets.filter((t) => t.status === "EnRoute").length,
+          inProgress: tickets.filter((t) => t.status === "InProgress").length,
+          resolved: tickets.filter((t) => t.status === "Resolved").length,
+        })
       } catch (error) {
-        console.error("Failed to load emergency stats", error);
+        console.error("Failed to load emergency stats", error)
       }
     }
-    
-    fetchSummary();
-    fetchEmergencyStats();
-  }, []);
+
+    fetchSummary()
+    fetchEmergencyStats()
+  }, [router])
 
   return (
     <SidebarProvider defaultOpen>
@@ -73,10 +70,9 @@ export default function DashboardPage() {
           <main className="flex-1 p-6">
             <div className="mb-6">
               <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-              <p className="text-muted-foreground">Welcome back! Here's an overview of your operations.</p>
+              <p className="text-muted-foreground">Welcome back! Here&apos;s an overview of your operations.</p>
             </div>
 
-            {/* KPI Cards */}
             <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
               <KPICard
                 title="Total Projects"
@@ -107,7 +103,6 @@ export default function DashboardPage() {
               />
             </div>
 
-            {/* Emergency Status Cards */}
             <div className="mb-6 grid gap-4 md:grid-cols-4">
               <div className="rounded-lg border border-destructive/20 bg-card p-4">
                 <div className="flex items-center justify-between">
@@ -147,13 +142,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Charts Section */}
             <div className="mb-6 grid gap-4 lg:grid-cols-3">
               <RevenueChart data={summary?.revenueData} />
               <ProjectProgressChart data={summary?.projectStatusData} />
             </div>
 
-            {/* Activity Feed */}
             <div className="grid gap-4">
               <ActivityFeed activities={summary?.recentActivities} />
             </div>

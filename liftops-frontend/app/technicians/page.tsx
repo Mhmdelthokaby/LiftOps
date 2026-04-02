@@ -48,7 +48,7 @@ export default function TechniciansPage() {
         // Check if user can view technicians (Manager only)
         if (!canManage()) {
             toast.error("Access denied. Manager role required.")
-            router.push("/")
+            router.push("/dashboard")
             return
         }
 

@@ -36,7 +36,7 @@ export default function AssignVisitsPage() {
 
   useEffect(() => {
     if (!canManageMaintenance()) {
-      router.push('/')
+      router.push("/dashboard")
       return
     }
     fetchData()
