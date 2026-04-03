@@ -71,8 +71,9 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
     private void ApplyTenantQueryFilter<TEntity>(ModelBuilder modelBuilder)
         where TEntity : LiftOps_BackEnd.Domain.Common.BaseAuditableEntity
     {
+        // Use Guid? == Guid (never .Value) so evaluation does not throw when tenant is null but bypass is true.
         modelBuilder.Entity<TEntity>()
-            .HasQueryFilter(e => BypassTenantFilter || (EffectiveTenantId.HasValue && e.CompanyId == EffectiveTenantId.Value));
+            .HasQueryFilter(e => BypassTenantFilter || EffectiveTenantId == e.CompanyId);
     }
 
     public DbSet<InventoryItem> InventoryItems { get; set; } = null!;

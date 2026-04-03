@@ -4,7 +4,6 @@ using LiftOps_BackEnd.API.Options;
 using LiftOps_BackEnd.API.Security;
 using LiftOps_BackEnd.Application;
 using LiftOps_BackEnd.Domain.Common;
-using LiftOps_BackEnd.Domain.Entities;
 using LiftOps_BackEnd.Infrastructure;
 using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,6 +19,7 @@ using System.Threading.RateLimiting;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -219,7 +219,7 @@ builder.Services.AddSwaggerGen(c => {
 
 var app = builder.Build();
 
-// Migrate and Seed Database (skipped when UseInMemoryDatabase=true, e.g. integration tests)
+// Apply database migrations (skipped when UseInMemoryDatabase=true, e.g. integration tests)
 var useInMemoryDb = app.Configuration.GetValue<bool>("UseInMemoryDatabase");
 if (!useInMemoryDb)
 {
@@ -231,17 +231,31 @@ if (!useInMemoryDb)
         {
             var context = services.GetRequiredService<ApplicationDbContext>();
             logger.LogInformation("Applying database migrations...");
+            await SqlServerDatabaseEnsurer.EnsureExistsAsync(
+                app.Configuration.GetConnectionString("DefaultConnection"),
+                logger);
+            var autoBaseline = app.Configuration.GetValue<bool>("Database:AutoBaselineMigrationHistory");
+            await EfMigrationHistoryBaseline.TryBaselineAsync(context, autoBaseline, logger);
             await context.Database.MigrateAsync();
             logger.LogInformation("Database migrations applied successfully.");
-
-            var userManager = services.GetRequiredService<UserManager<AppUser>>();
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-            await AdminSeeder.SeedAsync(userManager, roleManager);
-            // DashboardDataSeeder.SeedAsync(context); // Commented out - only manager/admin seeding is active
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred during migration or seeding.");
+            if (ex is SqlException sql && sql.Number == 2714
+                && sql.Message.Contains("AspNetRoles", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogError(
+                    "Migration failed: tables like AspNetRoles already exist, but __EFMigrationsHistory is empty or missing early migrations. " +
+                    "Entity Framework is trying to run the first migration again. " +
+                    "Fix (keep data): open SQL Server and run LiftOps-BackEnd.Infrastructure/Scripts/BaselineEfMigrationHistory.sql against this database, " +
+                    "then restart the API. " +
+                    "If your schema is not yet on PLAT001, comment out the PLAT001 block in that script before running it, then run: " +
+                    "dotnet ef database update --project LiftOps-BackEnd.Infrastructure --startup-project LiftOps-BackEnd.API. " +
+                    "Fix (dev only): drop and recreate the database, then restart. " +
+                    "See: https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/");
+            }
+
+            logger.LogError(ex, "An error occurred during database migration.");
             throw; // Re-throw to prevent app from starting with a broken database
         }
     }
