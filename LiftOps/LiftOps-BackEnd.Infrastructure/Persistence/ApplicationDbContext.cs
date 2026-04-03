@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LiftOps_BackEnd.Infrastructure.Persistence;
 
-public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetCore.Identity.IdentityRole<Guid>, Guid>
+public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetCore.Identity.IdentityRole<Guid>, Guid>, LiftOps_BackEnd.Application.Interfaces.IApplicationDbContext
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly ICurrentTenantService _currentTenantService;
@@ -275,6 +275,14 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .HasMaxLength(100);
 
         modelBuilder.Entity<Company>()
+            .Property(c => c.ContactPhone)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<Company>()
+            .Property(c => c.SuspensionReason)
+            .HasMaxLength(2000);
+
+        modelBuilder.Entity<Company>()
             .HasIndex(c => c.Slug)
             .IsUnique()
             .HasFilter("[Slug] IS NOT NULL AND [Slug] <> ''");
@@ -289,6 +297,10 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
 
         modelBuilder.Entity<SubscriptionPlan>()
             .Property(p => p.MonthlyPrice)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<SubscriptionPlan>()
+            .Property(p => p.YearlyPrice)
             .HasPrecision(18, 2);
 
         modelBuilder.Entity<SubscriptionPlan>()

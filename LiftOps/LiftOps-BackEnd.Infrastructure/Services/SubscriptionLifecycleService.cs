@@ -42,12 +42,15 @@ public class SubscriptionLifecycleService : ISubscriptionLifecycleService
         }
 
         var trialDays = _configuration.GetValue("Subscription:TrialDays", 14);
+        var now = DateTime.UtcNow;
         _context.Subscriptions.Add(new Subscription
         {
             CompanyId = companyId,
             PlanId = plan.Id,
             Status = SubscriptionStatus.Trial,
-            CurrentPeriodEnd = DateTime.UtcNow.AddDays(trialDays)
+            CurrentPeriodStart = now,
+            CurrentPeriodEnd = now.AddDays(trialDays),
+            BillingCycle = SubscriptionBillingCycle.Monthly
         });
 
         await _context.SaveChangesAsync(cancellationToken);

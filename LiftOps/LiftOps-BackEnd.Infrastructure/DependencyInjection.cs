@@ -72,6 +72,8 @@ public static class DependencyInjection
         services.AddScoped<ICompanyProvisioningService, CompanyProvisioningService>();
         services.AddScoped<ISubscriptionLifecycleService, SubscriptionLifecycleService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<LiftOps_BackEnd.Application.Interfaces.IApplicationDbContext>(sp =>
+            sp.GetRequiredService<ApplicationDbContext>());
 
         // Installation Module Repositories
         services.AddScoped<IInstallationProjectRepository, InstallationProjectRepository>();
