@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthGuard } from "@/components/auth-guard"
+import { Toaster } from "@/components/ui/sonner"
+import { ImpersonationBannerHost } from "@/components/impersonation-banner-host"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -29,8 +31,10 @@ export default function RootLayout({
       <body className={`font-sans antialiased`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" themes={["light", "sunset", "frost", "dark"]} enableSystem={false} disableTransitionOnChange>
           <AuthGuard>
+            <ImpersonationBannerHost />
             {children}
           </AuthGuard>
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
         <Analytics />
       </body>

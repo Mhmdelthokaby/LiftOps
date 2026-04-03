@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Offer } from "@/lib/api"
+import { formatDate } from "@/lib/utils"
 import { CheckCircle, XCircle } from "lucide-react"
 
 interface ApproveOfferDialogProps {

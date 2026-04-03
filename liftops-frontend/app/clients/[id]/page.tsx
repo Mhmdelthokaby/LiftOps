@@ -98,11 +98,11 @@ export default function ClientDetailsPage() {
             }
 
             const results = await Promise.all(promises)
-            const customersData = results[0]
-            const projectsData = results[1]
-            const maintenanceProjectsData = canViewMaintenanceData ? results[2] : []
+            const customersData = results[0] as Customer[]
+            const projectsData = results[1] as InstallationProject[]
+            const maintenanceProjectsData = (canViewMaintenanceData ? results[2] : []) as MaintenanceContract[]
 
-            const foundCustomer = customersData.find(c => c.id === id)
+            const foundCustomer = customersData.find((c: Customer) => c.id === id)
             if (!foundCustomer) {
                 toast.error("Client not found")
                 router.push("/clients")
@@ -110,12 +110,12 @@ export default function ClientDetailsPage() {
             }
 
             const installationProjects = projectsData.filter(
-                project => project.customerId === foundCustomer.id
+                (project: InstallationProject) => project.customerId === foundCustomer.id
             )
 
             const maintenanceContracts = canViewMaintenanceData 
                 ? maintenanceProjectsData.filter(
-                    contract => contract.customerId === foundCustomer.id
+                    (contract: MaintenanceContract) => contract.customerId === foundCustomer.id
                 )
                 : []
 

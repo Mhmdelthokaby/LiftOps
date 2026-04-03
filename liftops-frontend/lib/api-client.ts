@@ -1,7 +1,16 @@
 // Centralized API client with automatic token refresh and error handling
 
 import { API_BASE_URL } from "./api-config";
-import { getValidToken, logout, isAuthenticated } from "./auth";
+import { getValidToken, logout, isAuthenticated, isTokenExpired } from "./auth";
+import { skipLoginForAdminRoutes } from "./navigation";
+
+function isPlatformApiDevBypass(endpoint: string): boolean {
+  return (
+    typeof window !== "undefined" &&
+    skipLoginForAdminRoutes() &&
+    endpoint.startsWith("/api/platform")
+  );
+}
 
 // Custom error class for API errors
 export class ApiError extends Error {
@@ -20,27 +29,35 @@ export const apiClient = async (
     endpoint: string,
     options: RequestInit = {}
 ): Promise<Response> => {
-    // Check if user is authenticated before making request
-    if (!isAuthenticated() && endpoint !== '/api/Admin/login') {
+    const platformBypass = isPlatformApiDevBypass(endpoint);
+
+    if (!platformBypass) {
+        if (!isAuthenticated() && endpoint !== '/api/Admin/login') {
+            logout();
+            throw new ApiError(401, 'Unauthorized - Please login again');
+        }
+    }
+
+    let token: string | null = null;
+    if (endpoint === '/api/Admin/login') {
+        token = null;
+    } else if (platformBypass) {
+        const raw = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+        token = raw && !isTokenExpired(raw) ? raw : null;
+    } else {
+        token = await getValidToken();
+    }
+
+    if (!token && endpoint !== '/api/Admin/login' && !platformBypass) {
         logout();
         throw new ApiError(401, 'Unauthorized - Please login again');
     }
 
-    // Get valid token (will refresh if needed)
-    const token = await getValidToken();
-    
-    if (!token && endpoint !== '/api/Admin/login') {
-        logout();
-        throw new ApiError(401, 'Unauthorized - Please login again');
-    }
-
-    // Prepare headers
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
         ...(options.headers as Record<string, string> || {}),
     };
 
-    // Add authorization header if token exists
     if (token && endpoint !== '/api/Admin/login') {
         headers["Authorization"] = `Bearer ${token}`;
     }
@@ -71,6 +88,9 @@ export const apiClient = async (
 
     // Handle 401 Unauthorized - token expired or invalid
     if (response.status === 401) {
+        if (platformBypass && !token) {
+            return response;
+        }
         // Try to refresh token once
         if (endpoint !== '/api/Admin/login' && endpoint !== '/api/Admin/refresh-token') {
             const refreshed = await getValidToken();
@@ -97,17 +117,23 @@ export const apiClient = async (
                 }
                 
                 if (retryResponse.status === 401) {
-                    logout();
+                    if (!platformBypass) {
+                        logout();
+                    }
                     throw new ApiError(401, 'Session expired - Please login again');
                 }
                 
                 return retryResponse;
             } else {
-                logout();
+                if (!platformBypass) {
+                    logout();
+                }
                 throw new ApiError(401, 'Session expired - Please login again');
             }
         } else {
-            logout();
+            if (!platformBypass) {
+                logout();
+            }
             throw new ApiError(401, 'Unauthorized - Please login again');
         }
     }

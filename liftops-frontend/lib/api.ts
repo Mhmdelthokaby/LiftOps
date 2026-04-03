@@ -1187,6 +1187,7 @@ export interface MaintenanceContract {
     projectNumber: string;
     projectAddress?: string; // Project-specific address (can differ from customer address)
     city?: string;
+    googleMapsLink?: string;
     isFromInstallation: boolean;
     startDate: string;
     endDate: string;
@@ -1213,6 +1214,7 @@ export interface CreateMaintenanceProjectDto {
         projectNumber: string;
         projectAddress?: string;
         city?: string;
+        googleMapsLink?: string;
         startDate: string;
         endDate: string;
         pricePerMonth: number;
@@ -1848,3 +1850,5 @@ export const assignTechniciansToContractVisits = async (data: AssignTechniciansT
     });
     await parseResponse(response);
 };
+
+export * from "./api-platform"

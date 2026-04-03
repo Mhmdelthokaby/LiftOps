@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { getMonthlySchedule, assignVisitToTechnician, getTechnicians, Technician, MaintenanceVisitListItem } from "@/lib/api"
+import { getMonthlySchedule, assignVisitToTechnician, getTechnicians, Technician, MonthlyScheduleVisit } from "@/lib/api"
 import { AppHeader } from "@/components/app-header"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation"
 
 export default function AssignVisitsPage() {
   const router = useRouter()
-  const [visits, setVisits] = useState<MaintenanceVisitListItem[]>([])
+  const [visits, setVisits] = useState<MonthlyScheduleVisit[]>([])
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -27,7 +27,7 @@ export default function AssignVisitsPage() {
     today.setHours(0, 0, 0, 0)
     return today
   })
-  const [assignDialog, setAssignDialog] = useState<{ open: boolean; visit: MaintenanceVisitListItem | null }>({
+  const [assignDialog, setAssignDialog] = useState<{ open: boolean; visit: MonthlyScheduleVisit | null }>({
     open: false,
     visit: null
   })
@@ -84,7 +84,7 @@ export default function AssignVisitsPage() {
     }
   }
 
-  const handleAssignClick = (visit: MaintenanceVisitListItem) => {
+  const handleAssignClick = (visit: MonthlyScheduleVisit) => {
     setAssignDialog({ open: true, visit })
     setSelectedTechnicianId(visit.technicianId || "")
   }

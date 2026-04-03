@@ -144,7 +144,7 @@ export function EditContractDialog({
                 data: error?.data,
                 response: error?.response
             })
-            console.error("Payload sent:", updateData)
+            console.error("Payload sent:", formData)
             
             // Extract error message from various possible locations
             let errorMessage = "Failed to update contract"

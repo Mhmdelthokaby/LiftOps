@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { isAuthenticated, getValidToken } from "@/lib/auth"
-import { getPostLoginRedirectPath, isPublicPath } from "@/lib/navigation"
+import { getPostLoginRedirectPath, isPublicPath, skipLoginForAdminRoutes } from "@/lib/navigation"
+import { isPlatformAdmin } from "@/lib/user"
 import {
   canViewClients,
   canViewProjects,
@@ -91,6 +92,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
         return
       }
 
+      if (pathname.startsWith("/admin") && skipLoginForAdminRoutes()) {
+        setIsAuthorized(true)
+        setIsChecking(false)
+        return
+      }
+
       if (!isAuthenticated()) {
         router.push("/login")
         return
@@ -99,6 +106,25 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const token = await getValidToken()
       if (!token) {
         router.push("/login")
+        return
+      }
+
+      if (pathname.startsWith("/admin")) {
+        if (!isPlatformAdmin()) {
+          const userStr = localStorage.getItem("user")
+          let roles: string[] = []
+          if (userStr) {
+            try {
+              roles = JSON.parse(userStr).roles ?? []
+            } catch {
+              roles = []
+            }
+          }
+          router.push(getPostLoginRedirectPath(roles))
+          return
+        }
+        setIsAuthorized(true)
+        setIsChecking(false)
         return
       }
 

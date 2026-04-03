@@ -510,7 +510,9 @@ export default function TechnicianVisitsPage() {
                   </Card>
                 ) : (
                   <div className="grid gap-6">
-                    {emergencyTickets.filter(t => t.status !== "Resolved").map((ticket) => (
+                    {emergencyTickets.filter(t => t.status !== "Resolved").map((ticket) => {
+                      const emergencyStatus = ticket.status
+                      return (
                       <Card key={ticket.id} className={ticket.priority === "High" ? "border-destructive" : ""}>
                         <CardHeader>
                           <div className="flex items-start justify-between">
@@ -596,49 +598,29 @@ export default function TechnicianVisitsPage() {
                           <Separator />
 
                           <div className="flex flex-wrap gap-2">
-                            {ticket.status !== "Open" && (
+                            {emergencyStatus !== "Open" && (
                               <Button
-                                variant={ticket.status === "Open" ? "default" : "outline"}
+                                variant="outline"
                                 size="sm"
                                 onClick={() => handleEmergencyStatusChange(ticket.id, "Open")}
-                                disabled={ticket.status === "Open"}
-                                className={ticket.status === "Open" ? "bg-destructive text-destructive-foreground" : ""}
                               >
                                 Open
                               </Button>
                             )}
-                            {ticket.status !== "EnRoute" && (
-                              <Button
-                                variant={ticket.status === "EnRoute" ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handleEmergencyStatusChange(ticket.id, "EnRoute")}
-                                disabled={ticket.status === "EnRoute"}
-                                className={ticket.status === "EnRoute" ? "bg-chart-1 text-primary-foreground" : ""}
-                              >
+                            {emergencyStatus !== "EnRoute" && (
+                              <Button variant="outline" size="sm" onClick={() => handleEmergencyStatusChange(ticket.id, "EnRoute")}>
                                 <Navigation2 className="mr-1 h-3 w-3" />
                                 En Route
                               </Button>
                             )}
-                            {ticket.status !== "InProgress" && (
-                              <Button
-                                variant={ticket.status === "InProgress" ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handleEmergencyStatusChange(ticket.id, "InProgress")}
-                                disabled={ticket.status === "InProgress"}
-                                className={ticket.status === "InProgress" ? "bg-warning text-warning-foreground" : ""}
-                              >
+                            {emergencyStatus !== "InProgress" && (
+                              <Button variant="outline" size="sm" onClick={() => handleEmergencyStatusChange(ticket.id, "InProgress")}>
                                 <Wrench className="mr-1 h-3 w-3" />
                                 In Progress
                               </Button>
                             )}
-                            {ticket.status !== "Resolved" && (
-                              <Button
-                                variant={ticket.status === "Resolved" ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handleEmergencyStatusChange(ticket.id, "Resolved")}
-                                disabled={ticket.status === "Resolved"}
-                                className={ticket.status === "Resolved" ? "bg-success text-success-foreground" : ""}
-                              >
+                            {emergencyStatus !== "Resolved" && (
+                              <Button variant="outline" size="sm" onClick={() => handleEmergencyStatusChange(ticket.id, "Resolved")}>
                                 <CheckCircle2 className="mr-1 h-3 w-3" />
                                 Resolve
                               </Button>
@@ -646,7 +628,8 @@ export default function TechnicianVisitsPage() {
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </TabsContent>

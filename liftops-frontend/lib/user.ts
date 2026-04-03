@@ -103,6 +103,10 @@ export const isTechnician = (): boolean => {
     return hasRole('Technician');
 }
 
+export const isPlatformAdmin = (): boolean => {
+    return hasRole('PlatformAdmin');
+}
+
 // Technicians can only view their assigned visits
 export const canViewTechnicianVisits = (): boolean => {
     return isTechnician();
