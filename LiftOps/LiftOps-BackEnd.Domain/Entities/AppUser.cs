@@ -4,7 +4,8 @@ namespace LiftOps_BackEnd.Domain.Entities;
 
 public class AppUser : IdentityUser<Guid>
 {
-    public Guid CompanyId { get; set; }
+    /// <summary>Null for platform administrators (not bound to a tenant).</summary>
+    public Guid? CompanyId { get; set; }
     public string FullName { get; set; } = string.Empty;
     public bool IsDisabled { get; set; }
     public DateTime? LastLogin { get; set; }

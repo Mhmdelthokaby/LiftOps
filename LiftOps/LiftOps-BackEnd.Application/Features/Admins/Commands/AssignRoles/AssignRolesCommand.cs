@@ -22,7 +22,7 @@ public class AssignRolesCommandHandler : IRequestHandler<AssignRolesCommand, boo
     {
         var user = await _userManager.FindByIdAsync(request.Id.ToString());
         if (user == null) return false;
-        if (!_currentTenantService.CompanyId.HasValue || user.CompanyId != _currentTenantService.CompanyId.Value) return false;
+        if (!_currentTenantService.CompanyId.HasValue || user.CompanyId != _currentTenantService.CompanyId) return false;
 
         var currentRoles = await _userManager.GetRolesAsync(user);
         await _userManager.RemoveFromRolesAsync(user, currentRoles);

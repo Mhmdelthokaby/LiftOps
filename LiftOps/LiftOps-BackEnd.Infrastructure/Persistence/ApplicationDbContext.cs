@@ -135,7 +135,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             switch (entry.State)
             {
                 case EntityState.Added:
-                    if (entry.Entity.CompanyId == Guid.Empty && tenantId.HasValue)
+                    if ((!entry.Entity.CompanyId.HasValue || entry.Entity.CompanyId == Guid.Empty) && tenantId.HasValue)
                     {
                         entry.Entity.CompanyId = tenantId.Value;
                     }

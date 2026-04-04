@@ -37,7 +37,7 @@ public class ImpersonateUserCommandHandler : IRequestHandler<ImpersonateUserComm
             return Result<ImpersonateUserResponseDto>.Failure("User not found or disabled.");
         }
 
-        if (user.CompanyId == Guid.Empty)
+        if (!user.CompanyId.HasValue || user.CompanyId == Guid.Empty)
         {
             return Result<ImpersonateUserResponseDto>.Failure("User is not linked to a company.");
         }

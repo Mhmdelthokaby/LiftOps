@@ -1,5 +1,6 @@
 using LiftOps_BackEnd.Application.Features.Admins.DTOs;
 using LiftOps_BackEnd.Application.Interfaces;
+using LiftOps_BackEnd.Domain.Common;
 using LiftOps_BackEnd.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -37,22 +38,24 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
             return new AuthCommandResult(null, "invalid_token", "Invalid or expired token.");
         }
 
-        if (user.CompanyId == Guid.Empty)
+        var roles = await _userManager.GetRolesAsync(user);
+        var isPlatformAdmin = roles.Contains(Roles.PlatformAdmin, StringComparer.OrdinalIgnoreCase);
+        if (!isPlatformAdmin && (!user.CompanyId.HasValue || user.CompanyId == Guid.Empty))
         {
             return new AuthCommandResult(null, "company_membership_required", "User is not linked to a company yet.");
         }
-
-        var roles = await _userManager.GetRolesAsync(user);
         var newToken = _tokenService.CreateToken(user, roles);
         var newRefreshToken = _tokenService.GenerateRefreshToken();
 
         user.RefreshToken = newRefreshToken;
         await _userManager.UpdateAsync(user);
 
+        var expiry = user.RefreshTokenExpiry ?? DateTime.UtcNow.AddDays(7);
+
         return new AuthCommandResult(new AuthResponseDto(
             newToken,
             newRefreshToken,
-            user.RefreshTokenExpiry.Value,
+            expiry,
             user.FullName,
             user.Email!,
             roles

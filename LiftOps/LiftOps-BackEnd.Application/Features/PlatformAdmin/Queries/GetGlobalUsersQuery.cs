@@ -77,7 +77,7 @@ public class GetGlobalUsersQueryHandler : IRequestHandler<GetGlobalUsersQuery, R
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        var companyIds = users.Select(u => u.CompanyId).Distinct().ToList();
+        var companyIds = users.Where(u => u.CompanyId.HasValue).Select(u => u.CompanyId!.Value).Distinct().ToList();
         var companies = await _db.Companies.IgnoreQueryFilters()
             .AsNoTracking()
             .Where(c => companyIds.Contains(c.Id))
@@ -87,7 +87,7 @@ public class GetGlobalUsersQueryHandler : IRequestHandler<GetGlobalUsersQuery, R
         foreach (var u in users)
         {
             PlatformAdminMapper.SplitFullName(u.FullName, out var first, out var last);
-            companies.TryGetValue(u.CompanyId, out var companyName);
+            var companyName = u.CompanyId is { } cid && companies.TryGetValue(cid, out var n) ? n : string.Empty;
             var roleList = await _userManager.GetRolesAsync(u);
             var primaryRole = roleList.FirstOrDefault() ?? string.Empty;
 
@@ -97,7 +97,7 @@ public class GetGlobalUsersQueryHandler : IRequestHandler<GetGlobalUsersQuery, R
                 first,
                 last,
                 u.CompanyId,
-                companyName ?? string.Empty,
+                companyName,
                 primaryRole,
                 u.LastLogin,
                 !u.IsDisabled));

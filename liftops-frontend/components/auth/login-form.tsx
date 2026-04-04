@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { Loader2, Eye, EyeOff } from "lucide-react"
-import { loginSchema, type LoginFormData, loginAdmin, saveAuthDocs } from "@/lib/auth"
+import { loginSchema, type LoginFormData, login, saveAuthDocs } from "@/lib/auth"
 import { getPostLoginRedirectPath } from "@/lib/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,7 +29,7 @@ export function LoginForm() {
     const onSubmit = async (data: LoginFormData) => {
         setIsLoading(true)
         try {
-            const result = await loginAdmin(data)
+            const result = await login(data)
             saveAuthDocs(result)
 
             const redirectPath = getPostLoginRedirectPath(result.roles)

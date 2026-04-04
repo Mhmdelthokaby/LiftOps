@@ -4,6 +4,7 @@ using LiftOps_BackEnd.API.Options;
 using LiftOps_BackEnd.API.Security;
 using LiftOps_BackEnd.Application;
 using LiftOps_BackEnd.Domain.Common;
+using LiftOps_BackEnd.Domain.Entities;
 using LiftOps_BackEnd.Infrastructure;
 using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -257,6 +258,18 @@ if (!useInMemoryDb)
 
             logger.LogError(ex, "An error occurred during database migration.");
             throw; // Re-throw to prevent app from starting with a broken database
+        }
+
+        try
+        {
+            var userManager = services.GetRequiredService<UserManager<AppUser>>();
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+            await PlatformAdminSeeder.SeedAsync(userManager, roleManager, app.Configuration, logger);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Platform admin seeding failed.");
+            throw;
         }
     }
 }

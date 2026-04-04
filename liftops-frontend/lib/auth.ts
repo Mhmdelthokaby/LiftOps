@@ -18,29 +18,59 @@ export interface AuthResponse {
 
 import { API_BASE_URL } from "./api-config";
 
-export const loginAdmin = async (data: LoginFormData): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/api/Admin/login`, {
+/**
+ * Preferred login from the browser: hits Next.js BFF so httpOnly cookies are set for middleware.
+ */
+export const login = async (data: LoginFormData): Promise<AuthResponse> => {
+    const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ email: data.email, password: data.password }),
     });
 
     if (!response.ok) {
         let errorMessage = "Login failed";
         try {
             const errorData = await response.json();
-            errorMessage = errorData.message || errorMessage;
+            errorMessage =
+                (typeof errorData.message === "string" && errorData.message) ||
+                (typeof errorData.code === "string" && errorData.code) ||
+                errorMessage;
         } catch {
             // ignore JSON parse error
         }
         throw new Error(errorMessage);
     }
 
-    const result = await response.json();
-    // Login endpoint returns data directly (not wrapped in Result)
-    return result;
+    return response.json();
+};
+
+/** Direct call to the API (e.g. tooling); tenant and platform admins use the same handler. */
+export const loginAdmin = async (data: LoginFormData): Promise<AuthResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+    });
+
+    if (!response.ok) {
+        let errorMessage = "Login failed";
+        try {
+            const errorData = await response.json();
+            errorMessage =
+                (typeof errorData.message === "string" && errorData.message) ||
+                errorMessage;
+        } catch {
+            // ignore JSON parse error
+        }
+        throw new Error(errorMessage);
+    }
+
+    return response.json();
 };
 
 export const saveAuthDocs = (data: AuthResponse) => {
@@ -51,14 +81,33 @@ export const saveAuthDocs = (data: AuthResponse) => {
     }
 }
 
-export const logout = () => {
-    if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+export type CurrentUser = { name: string; email: string; roles: string[] };
+
+export const getCurrentUser = (): CurrentUser | null => {
+    if (typeof window === "undefined") return null;
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    try {
+        const u = JSON.parse(raw) as { name?: string; email?: string; roles?: string[] };
+        return {
+            name: u.name ?? "",
+            email: u.email ?? "",
+            roles: Array.isArray(u.roles) ? u.roles : [],
+        };
+    } catch {
+        return null;
     }
-}
+};
+
+export const logout = () => {
+    if (typeof window === "undefined") return;
+    void fetch("/api/auth/logout", { method: "POST" }).finally(() => {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+    });
+};
 
 // Check if JWT token is expired
 export const isTokenExpired = (token: string | null): boolean => {

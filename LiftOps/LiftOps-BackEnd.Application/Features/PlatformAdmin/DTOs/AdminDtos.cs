@@ -127,7 +127,7 @@ public record GlobalUserDto(
     string Email,
     string FirstName,
     string LastName,
-    Guid CompanyId,
+    Guid? CompanyId,
     string CompanyName,
     string Role,
     DateTime? LastLogin,

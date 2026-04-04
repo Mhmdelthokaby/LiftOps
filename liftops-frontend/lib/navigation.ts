@@ -21,6 +21,7 @@ export const PUBLIC_PATHS = new Set([
   "/pricing",
   "/contact",
   "/login",
+  "/admin/login",
 ])
 
 export function isPublicPath(pathname: string): boolean {
@@ -28,15 +29,9 @@ export function isPublicPath(pathname: string): boolean {
 }
 
 /**
- * Temporary: `/admin/*` works without signing in (UI + navigation only; API calls still need a token).
- * Set to `false` or use `NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH=false` to require login + PlatformAdmin again.
+ * When `true`, `/admin/*` skips client AuthGuard (middleware still enforces PlatformAdmin via cookie when possible).
+ * Set `NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH=true` for UI-only admin exploration without signing in.
  */
 export function skipLoginForAdminRoutes(): boolean {
-  if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH === "false") {
-    return false
-  }
-  if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH === "true") {
-    return true
-  }
-  return true
+  return typeof process !== "undefined" && process.env.NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH === "true"
 }

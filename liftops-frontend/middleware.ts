@@ -1,33 +1,63 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import { isJwtExpired, parseJwtPayloadJson, rolesFromJwtPayload } from "@/lib/jwt-edge"
 
-// Documented public paths (client-side AuthGuard enforces; localStorage is not available here)
-const publicRoutes = ["/", "/home", "/about", "/pricing", "/contact", "/login"]
+const publicRoutes = new Set([
+  "/",
+  "/home",
+  "/about",
+  "/pricing",
+  "/contact",
+  "/login",
+  "/admin/login",
+])
+
+function isPublicPath(pathname: string): boolean {
+  if (publicRoutes.has(pathname)) return true
+  if (pathname.startsWith("/admin/login")) return true
+  return false
+}
 
 export function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl
-    
-    // Allow public routes
-    if (publicRoutes.includes(pathname)) {
-        return NextResponse.next()
-    }
-    
-    // For protected routes, we'll let the client-side handle auth checking
-    // since we need to check localStorage which is only available on client
-    // The client-side auth guard will handle redirects
+  const { pathname } = request.nextUrl
+
+  if (isPublicPath(pathname)) {
     return NextResponse.next()
+  }
+
+  const bypassAdminGate = process.env.NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH === "true"
+
+  if (pathname.startsWith("/admin") && !bypassAdminGate) {
+    const token = request.cookies.get("liftops_access")?.value
+    if (!token) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/admin/login"
+      url.search = ""
+      return NextResponse.redirect(url)
+    }
+
+    const payload = parseJwtPayloadJson(token)
+    if (!payload || isJwtExpired(payload)) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/admin/login"
+      url.search = ""
+      return NextResponse.redirect(url)
+    }
+
+    const roles = rolesFromJwtPayload(payload)
+    if (!roles.includes("PlatformAdmin")) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/login"
+      url.search = ""
+      return NextResponse.redirect(url)
+    }
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
-    matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - api (API routes)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - public files (public folder)
-         */
-        '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-    ],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 }

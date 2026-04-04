@@ -111,12 +111,12 @@ export default function AdminUsersPage() {
       id: "company",
       header: "Company",
       cell: (row) =>
-        row.companyName ? (
+        row.companyId && row.companyName ? (
           <Link href={`/admin/companies/${row.companyId}`} className="text-primary hover:underline">
             {row.companyName}
           </Link>
         ) : (
-          row.companyId
+          <span className="text-muted-foreground">—</span>
         ),
     },
     {

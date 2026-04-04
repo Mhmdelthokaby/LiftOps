@@ -65,7 +65,8 @@ export interface AdminUser {
   email: string
   firstName?: string
   lastName?: string
-  companyId: string
+  /** Null for platform administrators without a tenant. */
+  companyId: string | null
   companyName?: string
   role: string
   lastLogin?: string

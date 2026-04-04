@@ -23,7 +23,7 @@ public class UpdateAdminCommandHandler : IRequestHandler<UpdateAdminCommand, boo
     {
         var user = await _userManager.FindByIdAsync(request.Id.ToString());
         if (user == null) return false;
-        if (!_currentTenantService.CompanyId.HasValue || user.CompanyId != _currentTenantService.CompanyId.Value) return false;
+        if (!_currentTenantService.CompanyId.HasValue || user.CompanyId != _currentTenantService.CompanyId) return false;
 
         user.FullName = request.UpdateDto.Name;
         user.Email = request.UpdateDto.Email;

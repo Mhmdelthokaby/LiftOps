@@ -75,8 +75,8 @@ public class GetCompaniesQueryHandler : IRequestHandler<GetCompaniesQuery, Resul
 
         var userCounts = await _db.Users.IgnoreQueryFilters()
             .AsNoTracking()
-            .Where(u => ids.Contains(u.CompanyId))
-            .GroupBy(u => u.CompanyId)
+            .Where(u => u.CompanyId != null && ids.Contains(u.CompanyId.Value))
+            .GroupBy(u => u.CompanyId!.Value)
             .Select(g => new { CompanyId = g.Key, Count = g.Count() })
             .ToListAsync(cancellationToken);
         var userCountDict = userCounts.ToDictionary(x => x.CompanyId, x => x.Count);

@@ -55,7 +55,8 @@ public static class EfMigrationHistoryBaseline
         "20260331135338_DB001_TenantScopedUniqueConstraints",
         "20260331135759_DB002_TenantCompositeIndexes",
         "20260331144307_SUB001_AddSubscriptionEntities",
-        "20260403200704_PLAT001_PlatformAdminFields"
+        "20260403200704_PLAT001_PlatformAdminFields",
+        "20260404101549_PLAT002_AppUserNullableCompanyId"
     };
 
     public static async Task TryBaselineAsync(

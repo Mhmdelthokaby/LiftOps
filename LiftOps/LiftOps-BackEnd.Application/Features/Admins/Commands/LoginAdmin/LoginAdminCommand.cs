@@ -1,5 +1,6 @@
 using LiftOps_BackEnd.Application.Features.Admins.DTOs;
 using LiftOps_BackEnd.Application.Interfaces;
+using LiftOps_BackEnd.Domain.Common;
 using LiftOps_BackEnd.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -35,12 +36,13 @@ public class LoginAdminCommandHandler : IRequestHandler<LoginAdminCommand, AuthC
             return new AuthCommandResult(null, "invalid_credentials", "Invalid email or password, or account disabled.");
         }
 
-        if (user.CompanyId == Guid.Empty)
+        var roles = await _userManager.GetRolesAsync(user);
+        var isPlatformAdmin = roles.Contains(Roles.PlatformAdmin, StringComparer.OrdinalIgnoreCase);
+        if (!isPlatformAdmin && (!user.CompanyId.HasValue || user.CompanyId == Guid.Empty))
         {
             return new AuthCommandResult(null, "company_membership_required", "User is not linked to a company yet.");
         }
 
-        var roles = await _userManager.GetRolesAsync(user);
         var token = _tokenService.CreateToken(user, roles);
         var refreshToken = _tokenService.GenerateRefreshToken();
 

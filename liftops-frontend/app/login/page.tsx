@@ -36,6 +36,12 @@ export default function LoginPage() {
           </div>
           <LoginForm />
           <p className="px-8 text-center text-sm text-muted-foreground">
+            Platform operator?{" "}
+            <a href="/admin/login" className="text-primary underline-offset-4 hover:underline">
+              Platform admin sign-in
+            </a>
+          </p>
+          <p className="px-8 text-center text-sm text-muted-foreground">
             By clicking continue, you agree to our{" "}
             <a href="#" className="underline underline-offset-4 hover:text-primary">
               Terms of Service

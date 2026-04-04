@@ -22,7 +22,7 @@ public class DisableAdminCommandHandler : IRequestHandler<DisableAdminCommand, b
     {
         var user = await _userManager.FindByIdAsync(request.Id.ToString());
         if (user == null) return false;
-        if (!_currentTenantService.CompanyId.HasValue || user.CompanyId != _currentTenantService.CompanyId.Value) return false;
+        if (!_currentTenantService.CompanyId.HasValue || user.CompanyId != _currentTenantService.CompanyId) return false;
 
         user.IsDisabled = request.Disable;
         var result = await _userManager.UpdateAsync(user);

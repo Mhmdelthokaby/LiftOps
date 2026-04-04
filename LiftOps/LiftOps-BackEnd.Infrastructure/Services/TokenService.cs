@@ -1,4 +1,5 @@
 using LiftOps_BackEnd.Application.Interfaces;
+using LiftOps_BackEnd.Domain.Common;
 using LiftOps_BackEnd.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -22,16 +23,20 @@ public class TokenService : ITokenService
 
     public string CreateToken(AppUser user, IList<string> roles)
     {
+        var isPlatformAdmin = roles.Any(r => string.Equals(r, Roles.PlatformAdmin, StringComparison.OrdinalIgnoreCase));
+
         var claims = new List<Claim>
         {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email!),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.FullName)
         };
 
-        if (user.CompanyId != Guid.Empty)
+        // Super admins: never emit tenant claim, even if CompanyId were set by mistake.
+        if (!isPlatformAdmin && user.CompanyId is { } companyId && companyId != Guid.Empty)
         {
-            claims.Add(new Claim("company_id", user.CompanyId.ToString()));
+            claims.Add(new Claim("company_id", companyId.ToString()));
         }
 
         foreach (var role in roles)
