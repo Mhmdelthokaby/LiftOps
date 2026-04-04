@@ -4,6 +4,23 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 
 ---
 
+## Audit status (living)
+
+Use this block as the **source of truth for what is shipped vs. still planned** relative to the codebase audit.
+
+### Completed — platform authentication
+
+- **[DONE] Super Admin login** — Backend: `LoginAdminCommand` + `POST /api/auth/login` and `POST /api/Admin/login`; `AppUser` with **`CompanyId = null`** for platform operators; role **`PlatformAdmin`**; optional **`PlatformAdminSeeder`** after migrations. Frontend: **`/admin/login`**, Next Route Handlers **`/api/auth/login`** and **`/api/auth/logout`** (httpOnly cookies), **`middleware.ts`** for **`/admin/*`** (PlatformAdmin + JWT from cookie).
+- **[DONE] JWT implementation (multi-tenant + platform)** — **`TokenService`**: HMAC-signed JWT with **`company_id`** for tenant users; claim **omitted** for **`PlatformAdmin`**. **`OnTokenValidated`**: requires **`company_id`** on authorized requests **except** under **`/api/platform`**. Tenant policies combine **role + tenant claim**; **`RequirePlatformAdmin`** is role-only.
+
+### Next 3 critical tasks (recommended sprint focus)
+
+1. **Tenant onboarding** — End-to-end flow (public signup or invite-only) that creates **`Company`**, first **Owner/Manager** user, and **trial `Subscription`** with clear UX and API contract (aligns with Phase 6 / GTM items still open).
+2. **Company management (tenant-facing)** — Stable **`GET`/`PUT`** (or equivalent) for tenant profile/settings consumed by a **dashboard settings** page; frontend **FE-004** plus any missing backend surface.
+3. **Subscription + error UX in frontend** — Trial/renewal banner, handling **`subscription_inactive`** / **402** paths, and centralized **401/403** behavior (**FE-002**, **FE-003**); reduce reliance on duplicated token handling between cookies and `localStorage` where practical.
+
+---
+
 ## Phase 0: System Hardening
 
 ### SEC-001 — Audit and close unauthenticated or overly permissive endpoints
@@ -166,6 +183,7 @@ Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET C
 
 ### FE-001 — Company context
 - [ ] Parse `company_id` from JWT payload (or session) after login; store in secure memory / context provider — avoid duplicating sensitive data in `localStorage` beyond token if possible.
+  - *Partial today:* tokens + user JSON live in `localStorage`; BFF sets httpOnly cookies for `/admin` middleware. Full “secure memory only” and explicit `company_id` React context is still open.
 
 ### FE-002 — API client
 - [ ] Ensure `Authorization` header on all calls; centralize 401/403 handling — redirect to login or “subscription expired” screen based on error code.

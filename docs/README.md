@@ -5,9 +5,11 @@ This folder contains the core project documentation and implementation guides.
 ## Core Docs (Keep and Maintain)
 
 - `docs/PROJECT_IDEA.md` - product vision, scope, and module map.
-- `docs/BACKEND_GUIDE.md` - backend architecture, roles, policies, and route map.
-- `docs/FRONTEND_GUIDE.md` - frontend architecture, routes, and role access.
-- `docs/SAAS_TASKS.md` - SaaS transformation backlog and task tracker.
+- `docs/ARCHITECTURE.md` - Clean Architecture flow, multi-tenant vs platform admin, system overview.
+- `docs/BACKEND_GUIDE.md` - backend stack, auth flow, DTOs/commands, seeding, policies.
+- `docs/FRONTEND_GUIDE.md` - App Router layout, auth BFF, middleware, guards.
+- `docs/SAAS_TASKS.md` - SaaS transformation backlog, audit status, next critical tasks.
+- `docs/AI_CONTEXT.md` - **context anchor for AI assistants** (stack, rules, critical facts, prompting).
 
 ## Existing Supporting Docs in Repository
 

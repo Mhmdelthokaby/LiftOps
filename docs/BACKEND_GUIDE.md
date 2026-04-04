@@ -1,150 +1,122 @@
 # Backend Guide
 
-This guide describes the LiftOps backend architecture, roles, and API route map.
+This guide matches the **current** `LiftOps/` solution layout (not `Src/`).
 
-## Stack
+## Stack and versions
 
-- ASP.NET Core Web API
-- Clean Architecture (API, Application, Domain, Infrastructure)
-- EF Core + SQL Server
-- MediatR for command/query handlers
-- JWT authentication + role/policy authorization
+- **.NET** 10 (`net10.0`)
+- **ASP.NET Core** Web API, JWT Bearer authentication
+- **EF Core** 10 + SQL Server
+- **MediatR** 14
+- **FluentValidation** 12
+- **AutoMapper** 12 (Infrastructure/Application as configured)
+- **ASP.NET Core Identity** with `UserManager` / `RoleManager` — passwords are hashed with **Identity’s default hasher** (PBKDF2), not BCrypt
 
-## High-Level Architecture
+## Solution layout
 
-- `LiftOps/LiftOps-BackEnd.API`: controllers, middleware, auth/policies, app startup.
-- `LiftOps/LiftOps-BackEnd.Application`: DTOs, commands/queries, validators, interfaces.
-- `LiftOps/LiftOps-BackEnd.Domain`: entities, enums, shared constants like roles.
-- `LiftOps/LiftOps-BackEnd.Infrastructure`: EF persistence, services, migrations.
+| Project | Responsibility |
+|---------|----------------|
+| `LiftOps-BackEnd.API` | Controllers, `Program.cs`, middleware, authorization policies |
+| `LiftOps-BackEnd.Application` | Features (e.g. `Features/Admins`, `Features/PlatformAdmin`), MediatR handlers, DTOs, validators, `IApplicationDbContext` |
+| `LiftOps-BackEnd.Domain` | Entities (`AppUser`, `Company`, modules), `Roles`, enums |
+| `LiftOps-BackEnd.Infrastructure` | `ApplicationDbContext`, migrations, `TokenService`, `CurrentTenantService`, repositories, `PlatformAdminSeeder`, `SqlServerDatabaseEnsurer`, `EfMigrationHistoryBaseline` |
 
-## Authentication and Tenant Security
+## User model
 
-- JWT is configured in `Program.cs`.
-- Authorized tenant endpoints require `company_id` claim.
-- Platform routes (`/api/platform/...`) are separated and use platform policy.
-- Subscription middleware can block write operations for inactive subscriptions.
+- **`AppUser`** (`Domain/Entities/AppUser.cs`): extends `IdentityUser<Guid>`.
+- Fields include **`CompanyId`** as **`Guid?`**. **Platform administrators** use **`null`**. Tenant users have a real company id.
+- Other profile fields: `FullName`, `IsDisabled`, `LastLogin`, refresh token fields, audit timestamps.
 
-## Roles
+## Authentication flow (implemented)
 
-Defined in `LiftOps-BackEnd.Domain/Common/Roles.cs`:
+### Login (same behavior on both routes)
 
-- `Manager`
-- `InstallationAdmin`
-- `MaintenanceAdmin`
-- `InventoryAdmin`
-- `FinanceAdmin`
-- `FaultsAdmin`
-- `Technician`
-- `PlatformAdmin`
+1. **HTTP** `POST /api/auth/login` — `AuthController` (`Controllers/AuthController.cs`).
+2. **HTTP** `POST /api/Admin/login` — `AdminController` (legacy-friendly path).
 
-## Authorization Policies
+Both send **`LoginAdminCommand`** via MediatR.
 
-Registered in `LiftOps-BackEnd.API/Program.cs`:
+### Handler logic (`Features/Admins/Commands/LoginAdmin/LoginAdminCommand.cs`)
 
-- `RequireManager`
-- `RequireInstallation`
-- `RequireMaintenance`
-- `RequireInventory`
-- `RequireFaults`
-- `EmergencyReport`
-- `EmergencyRead`
-- `EmergencyDispatch`
-- `EmergencyResolve`
-- `EmergencyManage`
-- `RequirePlatformAdmin`
+1. `UserManager.FindByEmailAsync`.
+2. Reject if user missing, disabled, or password fails `CheckPasswordAsync`.
+3. Load roles with `GetRolesAsync`.
+4. If the user is **not** `PlatformAdmin` and `CompanyId` is null or `Guid.Empty`, return error code **`company_membership_required`** (403 from controller).
+5. Otherwise `ITokenService.CreateToken(user, roles)`, issue refresh token, update user, return **`AuthResponseDto`**.
 
-## Main API Controllers and Routes
+### Refresh token
 
-Base paths and examples:
+- **`POST /api/Admin/refresh-token`** — `RefreshTokenCommand`.
+- Same **company** rule as login: non–platform users must have a resolved company id.
 
-- `api/Admin`
-  - `POST login`
-  - `POST refresh-token`
-  - `POST register`
-  - `GET list`
-  - `PUT update/{id}`
-  - `PUT disable/{id}`
-  - `PUT roles/{id}`
+### JWT generation (`Infrastructure/Services/TokenService.cs`)
 
-- `api/Installation`
-  - `POST project/add`
-  - `GET projects`
-  - `GET project/{id}`
-  - `POST stage/start`
-  - `POST stage/complete`
-  - `POST inspection/create`
-  - `POST offer/create`
-  - `POST quotation/create`
+- Signing: **HMAC-SHA512** with symmetric key from configuration **`Jwt:Key`**.
+- Claims include:
+  - **`sub`** — user id (JWT registered name)
+  - **`ClaimTypes.NameIdentifier`** — user id
+  - **Email**, **name**
+  - **`ClaimTypes.Role`** — one claim per role
+  - **`company_id`** — only if user is **not** `PlatformAdmin` and `CompanyId` is present and not empty
+- Issuer / audience / lifetime from **`Jwt:Issuer`**, **`Jwt:Audience`**, **`Jwt:DurationInMinutes`**.
 
-- `api/Maintenance`
-  - `POST add-contract`
-  - `POST visit/schedule`
-  - `POST visit/{visitId}/complete`
-  - `GET projects`
-  - `GET schedule/monthly`
-  - `GET statistics`
+### Configuration
 
-- `api/Inventory`
-  - `POST add`
-  - `PUT update/{id}`
-  - `GET all`
-  - `GET active`
-  - `GET value`
+- **`appsettings.json`**: JWT key placeholder `REPLACE_WITH_ENV_JWT_KEY` is **rejected** at startup unless overridden.
+- **`appsettings.Development.json`** is **gitignored**; local dev should set a real **`Jwt:Key`** there or via **`Jwt__Key`** environment variable.
+- **CORS**: `Cors:AllowedOrigins` (or related config in `Program.cs`) for frontend origins.
 
-- `api/Category`
-  - `POST add`
-  - `GET list`
+## DTOs and commands (login)
 
-- `api/Technician`
-  - `GET visits/today`
-  - `GET visits/{visitId}`
-  - `PUT visits/{visitId}/status`
-  - `POST visits/{visitId}/complete`
-  - `GET all`
-  - `POST add`
+| Name | Location | Purpose |
+|------|-----------|---------|
+| `LoginDto` | `Application/Features/Admins/DTOs/AdminDtos.cs` | Request body: **Email**, **Password** (JSON camelCase: `email`, `password`) |
+| `LoginAdminCommand` | `Features/Admins/Commands/LoginAdmin/` | MediatR command wrapping `LoginDto` |
+| `AuthResponseDto` | `AdminDtos.cs` | **Token**, **RefreshToken**, **RefreshTokenExpiry**, name, email, **Roles** |
+| `AuthCommandResult` | `AdminDtos.cs` | Success with `Auth` or failure with **ErrorCode** / **ErrorMessage** |
+| `RefreshTokenCommand` | `Features/Admins/Commands/RefreshToken/` | Refresh flow |
 
-- `api/Customers`
-  - `GET`
-  - `PUT {id}`
-  - `PUT {id}/status`
+Validation: **`LoginDtoValidator`** (FluentValidation) for login DTO.
 
-- `api/Emergency`
-  - `POST`
-  - `GET`
-  - `GET {id}`
-  - `PUT {id}`
-  - `DELETE {id}`
-  - `PUT {id}/assign-technician`
-  - `POST {id}/resolve`
-  - `GET open`
+## Authorization policies (`Program.cs`)
 
-- `api/Faults`
-  - `POST create-ticket`
-  - `PUT {ticketId}/assign-technician`
-  - `POST {ticketId}/resolve`
-  - `GET open`
+- Tenant-scoped policies (**Manager**, **Installation**, **Maintenance**, etc.) require both **role** and **`company_id`** claim.
+- **`RequirePlatformAdmin`**: role **PlatformAdmin** only (no tenant claim required).
+- JWT **`OnTokenValidated`**: non-platform authorized endpoints require **`company_id`** (see architecture doc).
 
-- `api/Dashboard`
-  - `GET summary`
+## Platform API surface
 
-- `api/platform/subscriptions` (platform admin)
-  - `POST {companyId}/extend-trial`
-  - `PUT {companyId}/status`
+Controllers under **`Controllers/Platform/`**, route prefix **`/api/platform`** (ASP.NET conventional routing). All use **`RequirePlatformAdmin`**. Includes companies, plans, subscriptions, users, dashboard, impersonation.
 
-- `api/subscription/webhook`
-  - `POST payment-failed`
+## Database seeding — platform super admin
 
-## Request Pipeline Notes
+- **`PlatformAdminSeeder`** (`Infrastructure/Persistence/PlatformAdminSeeder.cs`) runs **after migrations** in **`Program.cs`** (when not using in-memory database).
+- Controlled by configuration:
+  - **`PlatformAdmin:SeedOnStartup`** (boolean)
+  - **`PlatformAdmin:Email`**, **`PlatformAdmin:Password`**, optional **`PlatformAdmin:FullName`**
+- Behavior: ensures **`PlatformAdmin`** role exists; if user by email exists, adds role if missing; otherwise creates user with **`CompanyId = null`** and **`PlatformAdmin`** role.
+- **Production** `appsettings.json` ships **`SeedOnStartup: false`** and empty password; **Development** values live in the **ignored** `appsettings.Development.json` — do not commit secrets.
 
-- CORS policy: permissive in dev, configured origins in non-dev.
-- Forwarded headers support for reverse-proxy environments.
-- Global rate limiter includes auth and expensive endpoint partitions.
-- Unified JSON error envelope shape (`code`, `message`, `details`).
+There is **no** broad business data seeder in startup (inventory/demo data) in the current flow; only optional platform admin seeding.
 
-## Development Checklist
+## Rate limiting
 
-- Add authorization for every new route.
-- Ensure tenant-safe access for every by-id read/update.
-- Prefer MediatR handlers over controller business logic.
-- Add/maintain validation on write commands.
-- Keep migrations additive and safe for shared multi-tenant data.
+- Global fixed-window limiter in **`Program.cs`** partitions by scope (`auth`, `expensive`, `general`) and by **`company_id`** claim or client IP.
+- **`auth` scope** (stricter limits) is applied only to paths starting **`/api/Admin/login`** and **`/api/Admin/refresh-token`**. **`POST /api/auth/login`** currently uses the **general** partition unless you extend the `isAuthEndpoint` check.
+
+## Operational extras
+
+- **`SqlServerDatabaseEnsurer`**: creates the SQL database on the server if missing (connects to `master`) before migrate/baseline.
+- **`EfMigrationHistoryBaseline`**: optional dev aid when `__EFMigrationsHistory` is out of sync (see `Database:AutoBaselineMigrationHistory`).
+
+## Development checklist (unchanged intent)
+
+- New tenant-scoped entities: inherit **`BaseAuditableEntity`**, get **`CompanyId`** + query filter.
+- Platform-wide queries: **`IgnoreQueryFilters()`** and explicit safety checks.
+- Prefer **MediatR** over controller logic; validate commands.
+
+## Related docs
+
+- `docs/ARCHITECTURE.md` — multi-tenant and JWT claim rules.
+- `docs/SAAS_TASKS.md` — backlog status.
+- `docs/AI_CONTEXT.md` — quick reference for tools and naming.
