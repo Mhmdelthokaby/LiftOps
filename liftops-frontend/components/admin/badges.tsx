@@ -3,7 +3,8 @@ import type { CompanyStatus, SubscriptionStatus } from "@/types/admin"
 
 const companyStatusStyles: Record<CompanyStatus, { label: string; className: string }> = {
   Active: { label: "Active", className: "bg-green-600" },
-  Suspended: { label: "Suspended", className: "bg-red-600" },
+  Inactive: { label: "Inactive", className: "bg-red-600" },
+  Suspended: { label: "Suspended", className: "bg-amber-600" },
   SuspendedByAdmin: { label: "Suspended (admin)", className: "bg-red-700" },
   Deleted: { label: "Deleted", className: "bg-zinc-600" },
 }

@@ -10,6 +10,7 @@ import type {
   PlatformDashboardStats,
   SubscriptionListItem,
   SubscriptionsQueryParams,
+  UpdateCompanyPayload,
 } from "@/types/admin"
 
 function buildQuery(params: Record<string, string | number | undefined>): string {
@@ -38,21 +39,58 @@ export async function getCompanies(
     status: params.status,
     planId: params.planId,
   })
-  const response = await apiClient(`/api/platform/companies${qs}`, { method: "GET" })
+  const response = await apiClient(`/api/companies${qs}`, { method: "GET" })
   return parseResponse<PaginatedResult<Company>>(response)
 }
 
 export async function getCompanyById(id: string): Promise<Company> {
-  const response = await apiClient(`/api/platform/companies/${id}`, { method: "GET" })
+  const response = await apiClient(`/api/companies/${id}`, { method: "GET" })
   return parseResponse<Company>(response)
 }
 
-export async function createCompany(data: CreateCompanyPayload): Promise<Company> {
-  const response = await apiClient("/api/platform/companies", {
-    method: "POST",
-    body: JSON.stringify(data),
+export async function updateCompany(id: string, data: UpdateCompanyPayload): Promise<void> {
+  const response = await apiClient(`/api/companies/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: data.name,
+      isActive: data.isActive,
+      subscriptionPlanId: data.subscriptionPlanId,
+    }),
   })
-  return parseResponse<Company>(response)
+  await parseVoid(response)
+}
+
+export async function getActivePlans(): Promise<Plan[]> {
+  const response = await apiClient("/api/subscription-plans", { method: "GET" })
+  return parseResponse<Plan[]>(response)
+}
+
+/** Soft delete: deactivates company and hides from default lists; data retained. */
+export async function softDeleteCompany(id: string): Promise<void> {
+  const response = await apiClient(`/api/companies/${id}`, { method: "DELETE" })
+  await parseVoid(response)
+}
+
+/** Shape of `POST /api/companies` success body (company detail DTO + echoed password). */
+export interface CreateCompanyApiResponse {
+  company: Partial<Company> & Pick<Company, "id" | "name">
+  initialPassword?: string
+}
+
+export async function createCompany(data: CreateCompanyPayload): Promise<CreateCompanyApiResponse> {
+  const body: Record<string, string> = {
+    companyName: data.companyName,
+    adminEmail: data.adminEmail,
+    password: data.password,
+  }
+  if (data.planId) {
+    body.planId = data.planId
+  }
+  const response = await apiClient("/api/companies", {
+    method: "POST",
+    body: JSON.stringify(body),
+  })
+  return parseResponse<CreateCompanyApiResponse>(response)
 }
 
 async function parseVoid(response: Response): Promise<void> {

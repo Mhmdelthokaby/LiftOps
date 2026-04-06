@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Building2, CreditCard, FileText, LayoutGrid, Menu, Users, X } from "lucide-react"
+import { Building2, CreditCard, FileText, LayoutGrid, LogOut, Menu, Users, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { logout } from "@/lib/auth"
 import { getUser, type User } from "@/lib/user"
 
 const NAVIGATION_ITEMS = [
@@ -61,16 +62,30 @@ export default function AdminRootLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 space-y-2">
           <div className={cn("flex items-center gap-2 rounded-lg bg-accent p-2", sidebarOpen ? "" : "justify-center")}>
             <div className="h-8 w-8 shrink-0 rounded-full bg-primary" />
             {sidebarOpen && (
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{user?.name ?? "Platform admin"}</p>
                 <p className="truncate text-xs text-muted-foreground">{user?.email ?? ""}</p>
               </div>
             )}
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={cn(
+              "w-full gap-0",
+              sidebarOpen ? "justify-start" : "justify-center md:px-2"
+            )}
+            onClick={() => logout("/admin/login")}
+            title="Log out"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {sidebarOpen ? <span className="ml-2">Log out</span> : null}
+          </Button>
         </div>
       </aside>
 

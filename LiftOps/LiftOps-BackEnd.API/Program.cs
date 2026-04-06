@@ -103,8 +103,10 @@ builder.Services.AddAuthentication(options =>
             var isAnonymous = endpoint.Metadata.GetMetadata<IAllowAnonymous>() != null;
             var isAuthorizedEndpoint = endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Count != 0;
             var isPlatformRoute = context.HttpContext.Request.Path.StartsWithSegments("/api/platform", StringComparison.OrdinalIgnoreCase);
+            // Platform operators never have company_id in the JWT (TokenService omits it). Tenant-only rule must not apply to them.
+            var isPlatformAdmin = context.Principal?.IsInRole(Roles.PlatformAdmin) == true;
 
-            if (!isAnonymous && isAuthorizedEndpoint && !isPlatformRoute)
+            if (!isAnonymous && isAuthorizedEndpoint && !isPlatformRoute && !isPlatformAdmin)
             {
                 var hasCompanyClaim = context.Principal?.HasClaim(c =>
                     c.Type == "company_id" && !string.IsNullOrWhiteSpace(c.Value)) == true;

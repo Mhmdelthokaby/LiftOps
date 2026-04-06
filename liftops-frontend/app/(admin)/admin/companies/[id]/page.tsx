@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, CalendarClock, RefreshCw } from "lucide-react"
+import { ArrowLeft, CalendarClock, Pencil, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -37,8 +37,26 @@ import { CompanyStatusBadge, PlanCodeBadge, SubscriptionStatusBadge } from "@/co
 import { ConfirmationDialog } from "@/components/admin/confirmation-dialog"
 import { AdminErrorState } from "@/components/admin/admin-error-state"
 import { Skeleton } from "@/components/ui/skeleton"
+import { EditCompanyDialog } from "@/components/admin/companies/edit-company-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useCompanyDetails, usePlans } from "@/hooks/use-admin-data"
-import { activateCompany, changePlan, extendTrial, getPlanById, suspendCompany } from "@/lib/api"
+import {
+  activateCompany,
+  changePlan,
+  extendTrial,
+  getPlanById,
+  softDeleteCompany,
+  suspendCompany,
+} from "@/lib/api"
 import type { Plan } from "@/types/admin"
 
 export default function AdminCompanyDetailPage() {
@@ -56,6 +74,9 @@ export default function AdminCompanyDetailPage() {
   const [newPlanId, setNewPlanId] = useState("")
   const [planOpen, setPlanOpen] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deactivateOpen, setDeactivateOpen] = useState(false)
+  const [deactivateLoading, setDeactivateLoading] = useState(false)
 
   const loadPlanLimits = useCallback(async (planId: string | undefined) => {
     if (!planId) {
@@ -130,6 +151,21 @@ export default function AdminCompanyDetailPage() {
     }
   }
 
+  const handleDeactivate = async () => {
+    if (!id) return
+    setDeactivateLoading(true)
+    try {
+      await softDeleteCompany(id)
+      toast.success("Company deactivated")
+      setDeactivateOpen(false)
+      router.push("/admin/companies")
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Deactivate failed")
+    } finally {
+      setDeactivateLoading(false)
+    }
+  }
+
   const handleChangePlan = async () => {
     if (!id || !newPlanId) {
       toast.error("Select a plan.")
@@ -182,6 +218,11 @@ export default function AdminCompanyDetailPage() {
   }
 
   const sub = company.subscription
+  const subscriptionPlanLabel =
+    (sub?.planName && sub.planName.trim()) ||
+    company.subscriptionPlan?.trim() ||
+    company.planName?.trim() ||
+    null
 
   return (
     <TooltipProvider>
@@ -190,12 +231,25 @@ export default function AdminCompanyDetailPage() {
           title={company.name}
           description={company.slug ? `Slug: ${company.slug}` : "Company details"}
           actions={
-            <Button type="button" variant="outline" asChild>
-              <Link href="/admin/companies">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" asChild>
+                <Link href="/admin/companies">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Link>
+              </Button>
+              {company.status !== "Deleted" && (
+                <>
+                  <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit company
+                  </Button>
+                  <Button type="button" variant="destructive" onClick={() => setDeactivateOpen(true)}>
+                    Deactivate
+                  </Button>
+                </>
+              )}
+            </div>
           }
         />
 
@@ -205,7 +259,15 @@ export default function AdminCompanyDetailPage() {
               <h3 className="mb-4 text-lg font-semibold">Company</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Contact email</p>
+                  <p className="text-muted-foreground">Plan tier</p>
+                  <p className="font-medium">{company.subscriptionPlan ?? company.planName ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Active flag</p>
+                  <p className="font-medium">{company.isActive === false ? "No" : "Yes"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Billing / contact email</p>
                   <p className="font-medium">{company.contactEmail ?? "—"}</p>
                 </div>
                 <div>
@@ -218,8 +280,13 @@ export default function AdminCompanyDetailPage() {
                   <p className="text-muted-foreground">Created</p>
                   <p className="font-medium">{new Date(company.createdAt).toLocaleString()}</p>
                 </div>
+                <div>
+                  <p className="text-muted-foreground">Company ID</p>
+                  <p className="font-mono text-xs break-all">{company.id}</p>
+                </div>
               </div>
             </Card>
+
 
             <Card className="p-6">
               <h3 className="mb-4 text-lg font-semibold">Subscription</h3>
@@ -228,10 +295,12 @@ export default function AdminCompanyDetailPage() {
                   <div>
                     <p className="text-muted-foreground">Plan</p>
                     <div className="mt-1">
-                      {company.planName ? (
-                        <PlanCodeBadge code={company.planName} name={company.planName} />
+                      {subscriptionPlanLabel ? (
+                        <PlanCodeBadge code={subscriptionPlanLabel} name={subscriptionPlanLabel} />
                       ) : (
-                        <span>{sub.planId}</span>
+                        <span className="font-mono text-xs text-muted-foreground" title="Plan id">
+                          {sub.planId}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -258,6 +327,24 @@ export default function AdminCompanyDetailPage() {
               )}
             </Card>
           </div>
+
+          <Card className="p-6">
+            <h3 className="mb-4 text-lg font-semibold">Primary admin (Manager)</h3>
+            <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+              <div>
+                <p className="text-muted-foreground">Name</p>
+                <p className="font-medium">{company.defaultAdminName ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Email</p>
+                <p className="font-medium">{company.defaultAdminEmail ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Phone</p>
+                <p className="font-medium">{company.defaultAdminPhone ?? "—"}</p>
+              </div>
+            </div>
+          </Card>
 
           {(maxUsers > 0 || maxElevators > 0) && (
             <Card className="p-6">
@@ -351,7 +438,7 @@ export default function AdminCompanyDetailPage() {
 
             <Dialog open={suspendOpen} onOpenChange={setSuspendOpen}>
               <DialogTrigger asChild>
-                <Button type="button" variant="destructive">
+                <Button type="button" variant="destructive" disabled={company.status === "Deleted"}>
                   Suspend company
                 </Button>
               </DialogTrigger>
@@ -376,7 +463,7 @@ export default function AdminCompanyDetailPage() {
               </DialogContent>
             </Dialog>
 
-            {company.status !== "Active" && (
+            {company.status !== "Active" && company.status !== "Deleted" && (
               <Button type="button" variant="secondary" onClick={handleActivate} disabled={actionLoading}>
                 Activate company
               </Button>
@@ -400,6 +487,37 @@ export default function AdminCompanyDetailPage() {
             )}
           </div>
         </div>
+
+        <EditCompanyDialog
+          company={company}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          onSaved={() => refetch()}
+        />
+
+        <AlertDialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Deactivate this company?</AlertDialogTitle>
+              <AlertDialogDescription>
+                The tenant will be hidden from default lists and marked inactive. Operational data is not deleted.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deactivateLoading}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={deactivateLoading}
+                onClick={(e) => {
+                  e.preventDefault()
+                  void handleDeactivate()
+                }}
+              >
+                {deactivateLoading ? "Working…" : "Deactivate"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   )

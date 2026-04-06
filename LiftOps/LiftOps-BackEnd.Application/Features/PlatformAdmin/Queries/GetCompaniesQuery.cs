@@ -30,6 +30,12 @@ public class GetCompaniesQueryHandler : IRequestHandler<GetCompaniesQuery, Resul
 
         var q = _db.Companies.IgnoreQueryFilters().AsNoTracking();
 
+        if (string.IsNullOrWhiteSpace(request.Status) ||
+            !string.Equals(request.Status.Trim(), "Deleted", StringComparison.OrdinalIgnoreCase))
+        {
+            q = q.Where(c => !c.IsDeleted);
+        }
+
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var s = request.Search.Trim();
@@ -41,12 +47,24 @@ public class GetCompaniesQueryHandler : IRequestHandler<GetCompaniesQuery, Resul
             var st = request.Status.Trim();
             q = st switch
             {
-                "Active" => q.Where(c => c.TenantStatus == CompanyTenantStatus.Active && c.IsActive),
-                "Suspended" => q.Where(c => c.TenantStatus == CompanyTenantStatus.Suspended || (!c.IsActive && c.TenantStatus == CompanyTenantStatus.Active)),
-                "SuspendedByAdmin" => q.Where(c => c.TenantStatus == CompanyTenantStatus.SuspendedByAdmin),
-                "Deleted" => q.Where(c => c.TenantStatus == CompanyTenantStatus.Deleted),
+                "Active" => q.Where(c => !c.IsDeleted && c.TenantStatus == CompanyTenantStatus.Active && c.IsActive),
+                "Suspended" => q.Where(c => !c.IsDeleted && (c.TenantStatus == CompanyTenantStatus.Suspended || (!c.IsActive && c.TenantStatus == CompanyTenantStatus.Active))),
+                "SuspendedByAdmin" => q.Where(c => !c.IsDeleted && c.TenantStatus == CompanyTenantStatus.SuspendedByAdmin),
+                "Inactive" => q.Where(c => !c.IsDeleted && !c.IsActive && c.TenantStatus == CompanyTenantStatus.Active),
+                "Deleted" => q.Where(c => c.IsDeleted || c.TenantStatus == CompanyTenantStatus.Deleted),
                 _ => q
             };
+        }
+
+        if (request.PlanId is { } planFilter && planFilter != Guid.Empty)
+        {
+            var companyIdsForPlan = await _db.Subscriptions.IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(s => s.PlanId == planFilter)
+                .Select(s => s.CompanyId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+            q = q.Where(c => companyIdsForPlan.Contains(c.Id));
         }
 
         var total = await q.CountAsync(cancellationToken);
@@ -55,7 +73,18 @@ public class GetCompaniesQueryHandler : IRequestHandler<GetCompaniesQuery, Resul
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(c => new { c.Id, c.Name, c.BillingContactEmail, c.CreatedAt, c.IsActive, c.TenantStatus })
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.BillingContactEmail,
+                c.CreatedAt,
+                c.IsActive,
+                c.TenantStatus,
+                c.IsDeleted,
+                c.PlanId,
+                SubscriptionPlanName = c.Plan != null ? c.Plan.Name : null
+            })
             .ToListAsync(cancellationToken);
 
         var ids = companyRows.Select(c => c.Id).ToList();
@@ -70,67 +99,26 @@ public class GetCompaniesQueryHandler : IRequestHandler<GetCompaniesQuery, Resul
             .ToListAsync(cancellationToken);
 
         var subByCompany = subsRaw
-            .GroupBy(x => x.CompanyId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CreatedAt).First());
-
-        var userCounts = await _db.Users.IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(u => u.CompanyId != null && ids.Contains(u.CompanyId.Value))
-            .GroupBy(u => u.CompanyId!.Value)
-            .Select(g => new { CompanyId = g.Key, Count = g.Count() })
-            .ToListAsync(cancellationToken);
-        var userCountDict = userCounts.ToDictionary(x => x.CompanyId, x => x.Count);
-
-        var elevatorCounts = await _db.Elevators.IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(e => ids.Contains(e.CompanyId))
-            .GroupBy(e => e.CompanyId)
-            .Select(g => new { CompanyId = g.Key, Count = g.Count() })
-            .ToListAsync(cancellationToken);
-        var elevDict = elevatorCounts.ToDictionary(x => x.CompanyId, x => x.Count);
-
-        var maintElevCounts = await _db.MaintenanceElevators.IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(me => ids.Contains(me.CompanyId))
-            .GroupBy(me => me.CompanyId)
-            .Select(g => new { CompanyId = g.Key, Count = g.Count() })
-            .ToListAsync(cancellationToken);
-        foreach (var m in maintElevCounts)
-        {
-            if (elevDict.ContainsKey(m.CompanyId))
-            {
-                elevDict[m.CompanyId] += m.Count;
-            }
-            else
-            {
-                elevDict[m.CompanyId] = m.Count;
-            }
-        }
+            .GroupBy(s => s.CompanyId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(s => s.CreatedAt).First());
 
         var items = companyRows.Select(c =>
         {
-            subByCompany.TryGetValue(c.Id, out var sub);
-            userCountDict.TryGetValue(c.Id, out var uc);
-            elevDict.TryGetValue(c.Id, out var ec);
-            var company = new Company
-            {
-                Id = c.Id,
-                Name = c.Name,
-                BillingContactEmail = c.BillingContactEmail,
-                CreatedAt = c.CreatedAt,
-                IsActive = c.IsActive,
-                TenantStatus = c.TenantStatus
-            };
+            var latestSub = subByCompany.GetValueOrDefault(c.Id);
             return new CompanyListDto(
                 c.Id,
                 c.Name,
+                c.IsActive,
+                null,
                 c.BillingContactEmail,
-                PlatformAdminMapper.ToCompanyStatusString(company),
-                sub?.PlanName,
-                uc,
-                sub?.MaxUsers ?? 0,
-                ec,
-                sub?.MaxElevators ?? 0,
+                PlatformAdminMapper.ToCompanyStatusString(c.TenantStatus, c.IsActive, c.IsDeleted),
+                latestSub?.PlanName,
+                c.SubscriptionPlanName,
+                c.PlanId,
+                0,
+                latestSub?.MaxUsers ?? 0,
+                0,
+                latestSub?.MaxElevators ?? 0,
                 c.CreatedAt);
         }).ToList();
 

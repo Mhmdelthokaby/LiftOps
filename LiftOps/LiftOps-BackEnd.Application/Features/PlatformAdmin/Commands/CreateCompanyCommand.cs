@@ -31,129 +31,120 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
     public async Task<Result<CreateCompanyResponseDto>> Handle(CreateCompanyCommand request, CancellationToken cancellationToken)
     {
         var req = request.Request;
-        var plan = await _db.SubscriptionPlans
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == req.PlanId, cancellationToken);
-
-        if (plan == null)
+        // SqlServerRetryingExecutionStrategy requires transactions to run inside CreateExecutionStrategy().ExecuteAsync.
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
         {
-            return Result<CreateCompanyResponseDto>.Failure("Plan not found.");
-        }
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            Company company;
+            try
+            {
+                var companyExists = await _db.Companies.AnyAsync(c => c.Name.ToLower() == req.CompanyName.ToLower(), cancellationToken);
+                if (companyExists)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return Result<CreateCompanyResponseDto>.Failure("A company with this name already exists.");
+                }
 
-        var slugBase = new string(req.Name.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
-        if (string.IsNullOrEmpty(slugBase))
-        {
-            slugBase = "company";
-        }
+                SubscriptionPlan? plan;
+                if (req.PlanId is { } explicitPlanId && explicitPlanId != Guid.Empty)
+                {
+                    plan = await _db.SubscriptionPlans
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.Id == explicitPlanId && p.IsActive, cancellationToken);
+                    if (plan == null)
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        return Result<CreateCompanyResponseDto>.Failure("Subscription plan not found or inactive.");
+                    }
+                }
+                else
+                {
+                    plan = await _db.SubscriptionPlans
+                        .AsNoTracking()
+                        .Where(p => p.IsActive)
+                        .OrderBy(p => p.MonthlyPrice)
+                        .ThenBy(p => p.Name)
+                        .FirstOrDefaultAsync(cancellationToken);
+                    if (plan == null)
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        return Result<CreateCompanyResponseDto>.Failure("No active subscription plan is available. Create a plan in the admin console first.");
+                    }
+                }
 
-        var company = new Company
-        {
-            Name = req.Name.Trim(),
-            Slug = slugBase + "-" + Guid.NewGuid().ToString("N")[..8],
-            IsActive = true,
-            BillingContactEmail = req.ContactEmail.Trim(),
-            TenantStatus = CompanyTenantStatus.Active
-        };
+                var slugBase = new string(req.CompanyName.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
+                if (string.IsNullOrEmpty(slugBase))
+                {
+                    slugBase = "company";
+                }
 
-        _db.Companies.Add(company);
-        await _db.SaveChangesAsync(cancellationToken);
+                company = new Company
+                {
+                    Name = req.CompanyName.Trim(),
+                    Slug = slugBase + "-" + Guid.NewGuid().ToString("N")[..8],
+                    IsActive = true,
+                    BillingContactEmail = req.AdminEmail.Trim(),
+                    TenantStatus = CompanyTenantStatus.Active,
+                    PlanId = plan.Id
+                };
 
-        var now = DateTime.UtcNow;
-        var trialDays = Math.Max(0, plan.TrialDays);
-        var subscription = new Subscription
-        {
-            CompanyId = company.Id,
-            PlanId = plan.Id,
-            Status = SubscriptionStatus.Trial,
-            CurrentPeriodStart = now,
-            CurrentPeriodEnd = now.AddDays(trialDays == 0 ? 14 : trialDays),
-            BillingCycle = SubscriptionBillingCycle.Monthly
-        };
-        _db.Subscriptions.Add(subscription);
-        await _db.SaveChangesAsync(cancellationToken);
+                _db.Companies.Add(company);
+                await _db.SaveChangesAsync(cancellationToken);
 
-        var password = "Aa1!" + Guid.NewGuid().ToString("N")[..12];
-        var user = new AppUser
-        {
-            UserName = req.ContactEmail.Trim(),
-            Email = req.ContactEmail.Trim(),
-            FullName = req.Name.Trim(),
-            CompanyId = company.Id,
-            IsDisabled = false,
-            EmailConfirmed = true
-        };
+                var now = DateTime.UtcNow;
+                var trialDays = Math.Max(0, plan.TrialDays);
+                var subscription = new Subscription
+                {
+                    CompanyId = company.Id,
+                    PlanId = plan.Id,
+                    Status = SubscriptionStatus.Trial,
+                    CurrentPeriodStart = now,
+                    CurrentPeriodEnd = now.AddDays(trialDays == 0 ? 14 : trialDays),
+                    BillingCycle = SubscriptionBillingCycle.Monthly
+                };
+                _db.Subscriptions.Add(subscription);
+                await _db.SaveChangesAsync(cancellationToken);
 
-        var createResult = await _userManager.CreateAsync(user, password);
-        if (!createResult.Succeeded)
-        {
-            return Result<CreateCompanyResponseDto>.Failure(createResult.Errors.Select(e => e.Description).ToArray());
-        }
+                var user = new AppUser
+                {
+                    UserName = req.AdminEmail.Trim(),
+                    Email = req.AdminEmail.Trim(),
+                    FullName = req.CompanyName.Trim(),
+                    CompanyId = company.Id,
+                    IsDisabled = false,
+                    EmailConfirmed = true
+                };
 
-        if (!await _roleManager.RoleExistsAsync(Roles.Manager))
-        {
-            await _roleManager.CreateAsync(new IdentityRole<Guid>(Roles.Manager));
-        }
+                var createResult = await _userManager.CreateAsync(user, req.Password);
+                if (!createResult.Succeeded)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return Result<CreateCompanyResponseDto>.Failure(createResult.Errors.Select(e => e.Description).ToArray());
+                }
 
-        await _userManager.AddToRoleAsync(user, Roles.Manager);
+                if (!await _roleManager.RoleExistsAsync(Roles.Manager))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole<Guid>(Roles.Manager));
+                }
 
-        var detail = await BuildCompanyDetailAsync(company.Id, cancellationToken);
-        if (detail == null)
-        {
-            return Result<CreateCompanyResponseDto>.Failure("Company was created but could not be loaded.");
-        }
+                await _userManager.AddToRoleAsync(user, Roles.Manager);
 
-        return Result<CreateCompanyResponseDto>.Success(new CreateCompanyResponseDto(detail, password));
-    }
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Result<CreateCompanyResponseDto>.Failure($"An error occurred while creating the company: {ex.Message}");
+            }
 
-    private async Task<CompanyDetailDto?> BuildCompanyDetailAsync(Guid companyId, CancellationToken cancellationToken)
-    {
-        var company = await _db.Companies.IgnoreQueryFilters()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
+            var detail = await CompanyDetailAssembler.BuildAsync(_db, company.Id, cancellationToken);
+            if (detail == null)
+            {
+                return Result<CreateCompanyResponseDto>.Failure("Company created but details could not be retrieved.");
+            }
 
-        if (company == null)
-        {
-            return null;
-        }
-
-        var sub = await _db.Subscriptions.IgnoreQueryFilters()
-            .AsNoTracking()
-            .Include(s => s.Plan)
-            .Where(s => s.CompanyId == company.Id)
-            .OrderByDescending(s => s.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        SubscriptionDto? subDto = null;
-        PlanLimitsDto? limits = null;
-
-        if (sub != null)
-        {
-            var plan = sub.Plan;
-            subDto = new SubscriptionDto(
-                sub.Id,
-                sub.CompanyId,
-                sub.PlanId,
-                plan.Name,
-                PlatformAdminMapper.ToSubscriptionStatusString(sub.Status, sub.CurrentPeriodEnd),
-                sub.CurrentPeriodStart,
-                sub.CurrentPeriodEnd,
-                PlatformAdminMapper.ToBillingCycleString(sub.BillingCycle));
-
-            limits = new PlanLimitsDto(
-                plan.MaxUsers,
-                plan.MaxElevators,
-                plan.MaxMaintenanceContracts,
-                plan.MaxInstallationProjects);
-        }
-
-        return new CompanyDetailDto(
-            company.Id,
-            company.Name,
-            company.BillingContactEmail,
-            company.ContactPhone,
-            PlatformAdminMapper.ToCompanyStatusString(company),
-            company.CreatedAt,
-            subDto,
-            limits);
+            return Result<CreateCompanyResponseDto>.Success(new CreateCompanyResponseDto(detail, req.Password));
+        });
     }
 }

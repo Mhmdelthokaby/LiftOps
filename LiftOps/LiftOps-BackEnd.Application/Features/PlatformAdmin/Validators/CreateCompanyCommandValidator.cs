@@ -7,16 +7,17 @@ public class CreateCompanyCommandValidator : AbstractValidator<CreateCompanyComm
 {
     public CreateCompanyCommandValidator()
     {
-        RuleFor(x => x.Request.Name)
+        RuleFor(x => x.Request.CompanyName)
             .NotEmpty()
             .MaximumLength(200);
 
-        RuleFor(x => x.Request.ContactEmail)
+        RuleFor(x => x.Request.AdminEmail)
             .NotEmpty()
             .EmailAddress()
             .MaximumLength(256);
 
-        RuleFor(x => x.Request.PlanId)
-            .NotEmpty();
+        RuleFor(x => x.Request.Password)
+            .NotEmpty()
+            .MinimumLength(8);
     }
 }

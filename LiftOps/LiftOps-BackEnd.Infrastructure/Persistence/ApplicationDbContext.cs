@@ -284,9 +284,18 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .HasMaxLength(2000);
 
         modelBuilder.Entity<Company>()
+            .HasIndex(c => c.IsDeleted);
+
+        modelBuilder.Entity<Company>()
             .HasIndex(c => c.Slug)
             .IsUnique()
             .HasFilter("[Slug] IS NOT NULL AND [Slug] <> ''");
+
+        modelBuilder.Entity<Company>()
+            .HasOne(c => c.Plan)
+            .WithMany()
+            .HasForeignKey(c => c.PlanId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<SubscriptionPlan>()
             .Property(p => p.Code)
@@ -586,5 +595,42 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, Microsoft.AspNetC
             .WithMany(ci => ci.VisitChecklistItems)
             .HasForeignKey(vci => vci.ChecklistItemId)
             .OnDelete(DeleteBehavior.Restrict); // Don't delete checklist item template if used in visits
+
+        // Seed Subscription Plans
+        modelBuilder.Entity<SubscriptionPlan>().HasData(
+            new SubscriptionPlan
+            {
+                Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                Name = "Basic",
+                Code = "basic",
+                MonthlyPrice = 49.00m,
+                YearlyPrice = 490.00m,
+                MaxUsers = 5,
+                MaxElevators = 50,
+                IsActive = true
+            },
+            new SubscriptionPlan
+            {
+                Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                Name = "Pro",
+                Code = "pro",
+                MonthlyPrice = 99.00m,
+                YearlyPrice = 990.00m,
+                MaxUsers = 20,
+                MaxElevators = 200,
+                IsActive = true
+            },
+            new SubscriptionPlan
+            {
+                Id = new Guid("33333333-3333-3333-3333-333333333333"),
+                Name = "Enterprise",
+                Code = "enterprise",
+                MonthlyPrice = 249.00m,
+                YearlyPrice = 2490.00m,
+                MaxUsers = 100,
+                MaxElevators = 1000,
+                IsActive = true
+            }
+        );
     }
 }

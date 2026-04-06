@@ -8,7 +8,39 @@ import {
   getPlans,
   getPlatformDashboard,
   getSubscriptions,
+  getActivePlans,
 } from "@/lib/api"
+
+export function useActivePlans() {
+  const [data, setData] = useState<Plan[] | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
+  const refetch = useCallback(() => setReloadToken((t) => t + 1), [])
+
+  useEffect(() => {
+    let cancelled = false
+    setIsLoading(true)
+    setError(null)
+    getActivePlans()
+      .then((d) => {
+        if (!cancelled) setData(d)
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Failed to load active plans")
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [reloadToken])
+
+  return { data, isLoading, error, refetch }
+}
 import type {
   AdminUser,
   CompaniesQueryParams,

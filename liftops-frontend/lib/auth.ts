@@ -99,13 +99,14 @@ export const getCurrentUser = (): CurrentUser | null => {
     }
 };
 
-export const logout = () => {
+/** Clears BFF cookies and client auth storage, then redirects (default tenant login). */
+export const logout = (redirectTo: string = "/login") => {
     if (typeof window === "undefined") return;
     void fetch("/api/auth/logout", { method: "POST" }).finally(() => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
-        window.location.href = "/login";
+        window.location.href = redirectTo;
     });
 };
 

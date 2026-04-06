@@ -6,13 +6,22 @@ namespace LiftOps_BackEnd.Application.Features.PlatformAdmin;
 internal static class PlatformAdminMapper
 {
     public static string ToCompanyStatusString(Company company) =>
-        company.TenantStatus switch
+        ToCompanyStatusString(company.TenantStatus, company.IsActive, company.IsDeleted);
+
+    public static string ToCompanyStatusString(CompanyTenantStatus tenantStatus, bool isActive, bool isDeleted)
+    {
+        if (isDeleted || tenantStatus == CompanyTenantStatus.Deleted)
+        {
+            return "Deleted";
+        }
+
+        return tenantStatus switch
         {
             CompanyTenantStatus.Suspended => "Suspended",
             CompanyTenantStatus.SuspendedByAdmin => "SuspendedByAdmin",
-            CompanyTenantStatus.Deleted => "Deleted",
-            _ => company.IsActive ? "Active" : "Suspended"
+            _ => isActive ? "Active" : "Inactive"
         };
+    }
 
     public static string ToSubscriptionStatusString(SubscriptionStatus status, DateTime currentPeriodEnd)
     {

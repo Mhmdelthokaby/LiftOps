@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { AdminManagement } from "@/components/settings/admin-management"
 import { CategoryManagement } from "@/components/settings/category-management"
+import { CompanyProfileForm } from "@/components/settings/company-profile-form"
 import { hasRole } from "@/lib/user"
 
 export default function SettingsPage() {
@@ -31,6 +32,7 @@ export default function SettingsPage() {
             <div className="grid gap-6 max-w-4xl">
               {isManager && (
                 <>
+                  <CompanyProfileForm />
                   <AdminManagement />
                   <CategoryManagement />
                 </>

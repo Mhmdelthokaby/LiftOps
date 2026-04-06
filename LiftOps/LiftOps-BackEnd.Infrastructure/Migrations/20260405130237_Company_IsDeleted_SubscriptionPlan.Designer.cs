@@ -4,6 +4,7 @@ using LiftOps_BackEnd.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LiftOps_BackEnd.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260405130237_Company_IsDeleted_SubscriptionPlan")]
+    partial class Company_IsDeleted_SubscriptionPlan
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,12 +198,13 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid?>("PlanId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Slug")
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("SubscriptionPlan")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTime?>("SuspendedAt")
                         .HasColumnType("datetime2");
@@ -219,8 +223,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IsDeleted");
-
-                    b.HasIndex("PlanId");
 
                     b.HasIndex("Slug")
                         .IsUnique()
@@ -1836,65 +1838,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("SubscriptionPlans");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            AllowApiAccess = false,
-                            AllowEmergencyModule = true,
-                            AllowFaultsModule = true,
-                            AllowFinanceModule = true,
-                            AllowInventoryModule = true,
-                            Code = "basic",
-                            IsActive = true,
-                            MaxElevators = 50,
-                            MaxInstallationProjects = 100,
-                            MaxMaintenanceContracts = 100,
-                            MaxUsers = 5,
-                            MonthlyPrice = 49.00m,
-                            Name = "Basic",
-                            TrialDays = 14,
-                            YearlyPrice = 490.00m
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            AllowApiAccess = false,
-                            AllowEmergencyModule = true,
-                            AllowFaultsModule = true,
-                            AllowFinanceModule = true,
-                            AllowInventoryModule = true,
-                            Code = "pro",
-                            IsActive = true,
-                            MaxElevators = 200,
-                            MaxInstallationProjects = 100,
-                            MaxMaintenanceContracts = 100,
-                            MaxUsers = 20,
-                            MonthlyPrice = 99.00m,
-                            Name = "Pro",
-                            TrialDays = 14,
-                            YearlyPrice = 990.00m
-                        },
-                        new
-                        {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            AllowApiAccess = false,
-                            AllowEmergencyModule = true,
-                            AllowFaultsModule = true,
-                            AllowFinanceModule = true,
-                            AllowInventoryModule = true,
-                            Code = "enterprise",
-                            IsActive = true,
-                            MaxElevators = 1000,
-                            MaxInstallationProjects = 100,
-                            MaxMaintenanceContracts = 100,
-                            MaxUsers = 100,
-                            MonthlyPrice = 249.00m,
-                            Name = "Enterprise",
-                            TrialDays = 14,
-                            YearlyPrice = 2490.00m
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -2043,16 +1986,6 @@ namespace LiftOps_BackEnd.Infrastructure.Migrations
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Company", b =>
-                {
-                    b.HasOne("LiftOps_BackEnd.Domain.Entities.Subscription.SubscriptionPlan", "Plan")
-                        .WithMany()
-                        .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Plan");
                 });
 
             modelBuilder.Entity("LiftOps_BackEnd.Domain.Entities.Emergency.EmergencyTicket", b =>

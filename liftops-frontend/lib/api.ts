@@ -1852,3 +1852,38 @@ export const assignTechniciansToContractVisits = async (data: AssignTechniciansT
 };
 
 export * from "./api-platform"
+
+export interface CompanyProfile {
+    id: string;
+    name: string;
+    contactEmail: string;
+    contactPhone?: string;
+    address?: string;
+    city?: string;
+    logoUrl?: string;
+    planName: string;
+    planId: string;
+}
+
+export interface UpdateCompanyProfileDto {
+    name: string;
+    contactEmail: string;
+    contactPhone?: string;
+    address?: string;
+    city?: string;
+}
+
+export const getCompanyProfile = async (): Promise<CompanyProfile> => {
+    const response = await apiClient('/api/companies/profile', {
+        method: "GET",
+    });
+    return await parseResponse<CompanyProfile>(response);
+};
+
+export const updateCompanyProfile = async (data: UpdateCompanyProfileDto): Promise<void> => {
+    const response = await apiClient('/api/companies/profile', {
+        method: "PUT",
+        body: JSON.stringify(data),
+    });
+    await parseResponse(response);
+};

@@ -1,4 +1,9 @@
-export type CompanyStatus = "Active" | "Suspended" | "SuspendedByAdmin" | "Deleted"
+export type CompanyStatus =
+  | "Active"
+  | "Inactive"
+  | "Suspended"
+  | "SuspendedByAdmin"
+  | "Deleted"
 
 export type SubscriptionStatus = "Trial" | "Active" | "PastDue" | "Cancelled" | "Expired"
 
@@ -27,6 +32,8 @@ export interface Subscription {
   id: string
   companyId: string
   planId: string
+  /** Display name from linked subscription plan (API). */
+  planName?: string
   status: SubscriptionStatus
   currentPeriodStart: string
   currentPeriodEnd: string
@@ -48,16 +55,26 @@ export interface Company {
   name: string
   slug?: string
   contactEmail?: string
+  /** Primary admin / billing email (list API). */
+  adminEmail?: string
+  isActive?: boolean
+  isDeleted?: boolean
   status: CompanyStatus
   createdAt: string
   planName?: string
   planId?: string
+  /** Display tier (Free / Pro / Enterprise style). */
+  subscriptionPlan?: string | null
   currentUserCount: number
   currentElevatorCount: number
   subscription?: Subscription
   /** Limits from current plan (when API includes them). */
   planMaxUsers?: number
   planMaxElevators?: number
+  /** Detail API: first Manager user. */
+  defaultAdminName?: string | null
+  defaultAdminEmail?: string | null
+  defaultAdminPhone?: string | null
 }
 
 export interface AdminUser {
@@ -114,7 +131,15 @@ export interface GlobalUsersQueryParams {
 }
 
 export interface CreateCompanyPayload {
+  companyName: string
+  adminEmail: string
+  password: string
+  /** When set, backend uses this plan; otherwise the default active plan (lowest monthly price) is used. */
+  planId?: string
+}
+
+export interface UpdateCompanyPayload {
   name: string
-  contactEmail: string
-  planId: string
+  isActive: boolean
+  subscriptionPlanId?: string
 }
