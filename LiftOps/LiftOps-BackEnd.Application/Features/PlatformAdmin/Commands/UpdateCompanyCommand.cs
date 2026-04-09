@@ -31,6 +31,7 @@ public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand,
         var req = command.Request;
         company.Name = req.Name.Trim();
         company.IsActive = req.IsActive;
+        company.ContactPhone = string.IsNullOrWhiteSpace(req.ContactPhone) ? null : req.ContactPhone.Trim();
 
         if (req.PlanId.HasValue && req.PlanId != Guid.Empty)
         {

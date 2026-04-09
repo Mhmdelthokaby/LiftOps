@@ -54,7 +54,8 @@ export async function updateCompany(id: string, data: UpdateCompanyPayload): Pro
     body: JSON.stringify({
       name: data.name,
       isActive: data.isActive,
-      subscriptionPlanId: data.subscriptionPlanId,
+      planId: data.planId,
+      contactPhone: data.contactPhone,
     }),
   })
   await parseVoid(response)

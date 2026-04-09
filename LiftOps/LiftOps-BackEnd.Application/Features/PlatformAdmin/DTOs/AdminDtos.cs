@@ -19,6 +19,7 @@ public record CompanyListDto(
     bool IsActive,
     string? AdminEmail,
     string? ContactEmail,
+    string? ContactPhone,
     string Status,
     string? PlanName,
     string? SubscriptionPlan,
@@ -79,6 +80,7 @@ public record UpdateCompanyRequest
     public required string Name { get; init; }
     public bool IsActive { get; init; }
     public Guid? PlanId { get; init; }
+    public string? ContactPhone { get; init; }
 }
 
 public record SuspendCompanyRequest(string Reason);

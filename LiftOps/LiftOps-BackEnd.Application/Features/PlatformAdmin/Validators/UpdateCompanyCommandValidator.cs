@@ -14,5 +14,8 @@ public class UpdateCompanyCommandValidator : AbstractValidator<UpdateCompanyComm
         RuleFor(x => x.Request.PlanId)
             .Must(id => id is null || id != Guid.Empty)
             .WithMessage("Subscription plan id must be a valid Guid when provided.");
+
+        RuleFor(x => x.Request.ContactPhone)
+            .MaximumLength(50);
     }
 }

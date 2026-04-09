@@ -55,6 +55,7 @@ export interface Company {
   name: string
   slug?: string
   contactEmail?: string
+  contactPhone?: string
   /** Primary admin / billing email (list API). */
   adminEmail?: string
   isActive?: boolean
@@ -141,5 +142,6 @@ export interface CreateCompanyPayload {
 export interface UpdateCompanyPayload {
   name: string
   isActive: boolean
-  subscriptionPlanId?: string
+  planId?: string
+  contactPhone?: string
 }

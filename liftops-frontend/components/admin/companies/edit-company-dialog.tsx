@@ -19,7 +19,7 @@ import type { Company } from "@/types/admin"
 import { SubscriptionPlanSelect } from "./subscription-plan-select"
 
 export interface EditCompanyDialogProps {
-  company: Pick<Company, "id" | "name" | "planId"> & {
+  company: Pick<Company, "id" | "name" | "planId" | "contactPhone"> & {
     isActive?: boolean
   } | null
   open: boolean
@@ -31,6 +31,7 @@ export function EditCompanyDialog({ company, open, onOpenChange, onSaved }: Edit
   const [name, setName] = useState("")
   const [isActive, setIsActive] = useState(true)
   const [planId, setPlanId] = useState<string>("")
+  const [contactPhone, setContactPhone] = useState("")
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export function EditCompanyDialog({ company, open, onOpenChange, onSaved }: Edit
     setName(company.name)
     setIsActive(company.isActive !== false)
     setPlanId(company.planId ?? "")
+    setContactPhone(company.contactPhone ?? "")
   }, [company, open])
 
   const handleSave = async () => {
@@ -50,7 +52,8 @@ export function EditCompanyDialog({ company, open, onOpenChange, onSaved }: Edit
       await updateCompany(company.id, {
         name: name.trim(),
         isActive,
-        subscriptionPlanId: planId || undefined,
+        planId: planId || undefined,
+        contactPhone: contactPhone.trim() || undefined,
       })
       toast.success("Company updated")
       onOpenChange(false)
@@ -67,7 +70,7 @@ export function EditCompanyDialog({ company, open, onOpenChange, onSaved }: Edit
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit company</DialogTitle>
-          <DialogDescription>Update tenant display name, plan tier, and active status.</DialogDescription>
+          <DialogDescription>Update company name, phone number, plan tier, and active status.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
@@ -77,6 +80,16 @@ export function EditCompanyDialog({ company, open, onOpenChange, onSaved }: Edit
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="organization"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-co-phone">Phone</Label>
+            <Input
+              id="edit-co-phone"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              placeholder="+20 100 000 0000"
+              autoComplete="tel"
             />
           </div>
           <div className="space-y-2">

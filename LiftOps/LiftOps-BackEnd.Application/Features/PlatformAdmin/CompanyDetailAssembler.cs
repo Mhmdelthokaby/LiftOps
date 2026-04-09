@@ -85,7 +85,7 @@ internal static class CompanyDetailAssembler
             company.CreatedAt,
             defaultAdmin?.FullName,
             defaultAdmin?.Email,
-            defaultAdmin?.PhoneNumber,
+            defaultAdmin?.PhoneNumber ?? company.ContactPhone,
             userCount,
             elevCount + maintElev,
             subDto,
