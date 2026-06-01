@@ -1,5 +1,5 @@
 import { LoginForm } from "@/components/auth/login-form"
-import { Building2 } from "lucide-react"
+import { Logo } from "@/components/marketing/logo"
 
 export default function LoginPage() {
   return (
@@ -14,9 +14,12 @@ export default function LoginPage() {
             backgroundSize: "cover",
           }}
         />
-        <div className="relative z-20 flex items-center text-lg font-medium">
-          <Building2 className="mr-2 h-6 w-6 text-primary" />
-          LiftOps
+        <div className="relative z-20 flex items-center gap-2.5 text-lg font-black tracking-tight">
+          <Logo size={24} />
+          <span>
+            <span className="text-white">Lift</span>
+            <span className="text-accent">Ops</span>
+          </span>
         </div>
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
@@ -30,9 +33,12 @@ export default function LoginPage() {
       </div>
       <div className="lg:p-8">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center lg:hidden">
-            <Building2 className="mx-auto h-10 w-10 text-primary mb-2" />
-            <h1 className="text-2xl font-semibold tracking-tight">LiftOps</h1>
+          <div className="flex flex-col space-y-2 text-center lg:hidden items-center">
+            <Logo size={42} className="mb-2" />
+            <h1 className="text-2xl font-black tracking-tight">
+              <span className="text-foreground">Lift</span>
+              <span className="text-accent">Ops</span>
+            </h1>
           </div>
           <LoginForm />
           <p className="px-8 text-center text-sm text-muted-foreground">

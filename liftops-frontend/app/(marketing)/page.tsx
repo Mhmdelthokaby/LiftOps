@@ -3,16 +3,23 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MarketingNavbar } from "@/components/marketing/navbar"
 import { ArrowRight, CheckCircle2, Zap, Users, BarChart3 } from "lucide-react"
+import { Logo } from "@/components/marketing/logo"
 
 export default function MarketingHomePage() {
   return (
     <>
       <MarketingNavbar />
-      <main className="min-h-screen bg-background">
-        <section className="relative overflow-hidden px-6 py-32 sm:px-8 sm:py-40 lg:px-12 lg:py-48">
+      <main className="min-h-screen bg-background relative overflow-hidden">
+        {/* Futuristic Industrial Background Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 h-[600px] w-full max-w-7xl overflow-hidden opacity-40 pointer-events-none">
+          <div className="absolute top-[-150px] left-[25%] h-[450px] w-[450px] rounded-full bg-accent/15 blur-[100px] animate-pulse" />
+          <div className="absolute top-[-80px] right-[20%] h-[350px] w-[350px] rounded-full bg-primary/10 blur-[80px]" />
+        </div>
+
+        <section className="relative px-6 py-28 sm:px-8 sm:py-36 lg:px-12 lg:py-44">
           <div className="mx-auto max-w-6xl">
             <div className="mb-10 flex justify-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary border border-primary/20">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
@@ -21,11 +28,11 @@ export default function MarketingHomePage() {
               </div>
             </div>
 
-            <h1 className="mb-8 text-balance text-center text-5xl font-bold leading-tight text-foreground sm:text-6xl lg:text-7xl">
+            <h1 className="mb-8 text-balance text-center text-5xl font-bold leading-tight text-foreground sm:text-6xl lg:text-7xl tracking-tight">
               Streamline Elevator Operations
             </h1>
 
-            <p className="mx-auto mb-12 max-w-3xl text-center text-lg leading-relaxed text-foreground/70 sm:text-xl">
+            <p className="mx-auto mb-12 max-w-3xl text-center text-lg leading-relaxed text-foreground/75 sm:text-xl">
               Complete workflow management for installations, maintenance scheduling, emergency response, and inventory
               tracking. Everything your team needs in one platform.
             </p>
@@ -34,7 +41,7 @@ export default function MarketingHomePage() {
               <Button
                 asChild
                 size="lg"
-                className="rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+                className="rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground hover:bg-primary/95 cursor-pointer shadow-lg shadow-primary/10 transition-all duration-200"
               >
                 <Link href="/login">
                   Get Started <ArrowRight className="ml-2 h-4 w-4" />
@@ -44,29 +51,30 @@ export default function MarketingHomePage() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="rounded-full border-foreground/20 px-8 text-base font-semibold hover:bg-foreground/5"
+                className="rounded-full border-foreground/20 px-8 text-base font-semibold hover:bg-foreground/5 cursor-pointer"
               >
                 <Link href="#features">See Features</Link>
               </Button>
             </div>
 
-            <div className="relative h-96 w-full overflow-hidden rounded-2xl border border-border/50 shadow-xl">
+            <div className="relative h-96 w-full overflow-hidden rounded-2xl border border-border shadow-xl">
               <Image
                 src="/hero-illustration.jpg"
                 alt="LiftOps Dashboard"
                 fill
-                className="object-cover"
+                className="object-cover opacity-90"
                 priority
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
             </div>
           </div>
         </section>
 
-        <section id="features" className="bg-foreground/2 px-6 py-24 sm:px-8 sm:py-32 lg:px-12">
+        <section id="features" className="bg-secondary/40 px-6 py-24 sm:px-8 sm:py-32 lg:px-12 border-y border-border/50">
           <div className="mx-auto max-w-6xl">
             <div className="mb-16 text-center">
-              <h2 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">Everything you need</h2>
-              <p className="mx-auto max-w-2xl text-lg text-foreground/60">
+              <h2 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl tracking-tight">Everything you need</h2>
+              <p className="mx-auto max-w-2xl text-lg text-foreground/70">
                 Powerful tools designed specifically for elevator operations teams
               </p>
             </div>
@@ -106,17 +114,18 @@ export default function MarketingHomePage() {
                 return (
                   <div
                     key={index}
-                    className="group overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+                    className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5"
                   >
-                    <div className="relative h-48 w-full bg-primary/5">
-                      <Image src={feature.image} alt={feature.title} fill className="object-cover" />
+                    <div className="relative h-48 w-full bg-accent/5 overflow-hidden">
+                      <Image src={feature.image} alt={feature.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-card/35 to-transparent" />
                     </div>
                     <div className="p-8">
-                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
-                        <Icon className="h-6 w-6 text-primary" />
+                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-accent/10">
+                        <Icon className="h-6 w-6 text-primary group-hover:text-accent transition-colors duration-200" />
                       </div>
-                      <h3 className="mb-3 text-lg font-semibold text-foreground">{feature.title}</h3>
-                      <p className="text-sm leading-relaxed text-foreground/70">{feature.description}</p>
+                      <h3 className="mb-3 text-lg font-semibold text-foreground group-hover:text-accent transition-colors duration-200">{feature.title}</h3>
+                      <p className="text-sm leading-relaxed text-foreground/75">{feature.description}</p>
                     </div>
                   </div>
                 )
@@ -125,7 +134,7 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
-        <section className="px-6 py-24 sm:px-8 sm:py-32 lg:px-12">
+        <section className="px-6 py-24 sm:px-8 sm:py-32 lg:px-12 border-b border-border/30">
           <div className="mx-auto max-w-6xl">
             <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
               {[
@@ -134,42 +143,47 @@ export default function MarketingHomePage() {
                 { stat: "99.9%", label: "Uptime" },
                 { stat: "24/7", label: "Support" },
               ].map((item, index) => (
-                <div key={index} className="text-center">
-                  <p className="mb-2 text-3xl font-bold text-primary sm:text-4xl">{item.stat}</p>
-                  <p className="text-sm text-foreground/60">{item.label}</p>
+                <div key={index} className="text-center group">
+                  <p className="mb-2 text-4xl font-extrabold text-primary sm:text-5xl tracking-tight transition-transform duration-300 group-hover:scale-105">{item.stat}</p>
+                  <p className="text-sm font-medium text-foreground/70 uppercase tracking-wider">{item.label}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="px-6 py-24 sm:px-8 sm:py-32 lg:px-12">
+        <section className="px-6 py-24 sm:px-8 sm:py-32 lg:px-12 bg-secondary/20">
           <div className="mx-auto max-w-6xl">
             <div className="mb-16 text-center">
-              <h2 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">Powerful Dashboard</h2>
-              <p className="mx-auto max-w-2xl text-lg text-foreground/60">
+              <h2 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl tracking-tight">Powerful Dashboard</h2>
+              <p className="mx-auto max-w-2xl text-lg text-foreground/70">
                 Visualize your entire elevator operations in one unified dashboard
               </p>
             </div>
-            <div className="relative h-96 w-full overflow-hidden rounded-2xl border border-border/50 shadow-2xl">
-              <Image src="/dashboard-vector.jpg" alt="LiftOps Dashboard" fill className="object-cover" />
+            <div className="relative h-96 w-full overflow-hidden rounded-2xl border border-border shadow-2xl">
+              <Image src="/dashboard-vector.jpg" alt="LiftOps Dashboard" fill className="object-cover opacity-95" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent" />
             </div>
           </div>
         </section>
 
-        <section className="bg-foreground/2 px-6 py-24 sm:px-8 sm:py-32 lg:px-12">
+        <section className="px-6 py-24 sm:px-8 sm:py-32 lg:px-12">
           <div className="mx-auto max-w-4xl">
-            <div className="rounded-3xl bg-gradient-to-br from-primary to-primary/80 p-12 text-center shadow-xl sm:p-16">
-              <h2 className="mb-4 text-4xl font-bold text-primary-foreground sm:text-5xl">
+            <div className="rounded-3xl bg-gradient-to-br from-secondary to-card border border-border p-12 text-center shadow-2xl sm:p-16 relative overflow-hidden">
+              {/* Subtle background glow */}
+              <div className="absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-accent/10 blur-[50px] pointer-events-none" />
+              <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-primary/10 blur-[50px] pointer-events-none" />
+
+              <h2 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl tracking-tight">
                 Ready to transform your operations?
               </h2>
-              <p className="mx-auto mb-10 max-w-2xl text-lg text-primary-foreground/90">
+              <p className="mx-auto mb-10 max-w-2xl text-lg text-foreground/75">
                 Join hundreds of elevator companies streamlining their workflows with LiftOps
               </p>
               <Button
                 asChild
                 size="lg"
-                className="rounded-full bg-accent px-8 text-base font-semibold text-accent-foreground hover:bg-accent/90"
+                className="rounded-full bg-accent px-8 text-base font-semibold text-accent-foreground hover:bg-accent/95 cursor-pointer shadow-lg shadow-accent/25 transition-transform duration-200 hover:scale-[1.02]"
               >
                 <Link href="/login">
                   Start Your Free Trial <ArrowRight className="ml-2 h-4 w-4" />
@@ -181,13 +195,20 @@ export default function MarketingHomePage() {
 
         <footer className="border-t border-border/30 bg-background px-6 py-12 sm:px-8 lg:px-12">
           <div className="mx-auto max-w-6xl">
-            <div className="mb-8 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-primary-foreground">L</span>
+            <div className="mb-8 flex items-center gap-3">
+              <Logo size={36} />
+              <div className="flex flex-col">
+                <span className="text-xl font-black tracking-tight leading-none">
+                  <span className="text-foreground">Lift</span>
+                  <span className="text-accent">Ops</span>
+                </span>
+                <div className="h-[1px] w-full bg-accent/25 my-1" />
+                <span className="text-[8px] font-bold tracking-[0.18em] text-accent uppercase leading-none">
+                  Elevator Management
+                </span>
               </div>
-              <span className="text-lg font-semibold text-foreground">LiftOps</span>
             </div>
-            <p className="max-w-2xl text-sm text-foreground/50">
+            <p className="max-w-2xl text-sm text-foreground/60 leading-relaxed">
               Platform for elevator companies to streamline installations, maintenance, emergency response, and inventory
               management.
             </p>
