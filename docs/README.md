@@ -18,7 +18,7 @@ This folder contains the core project documentation for the merged Next.js proje
 
 ## Quick Reference
 
-- **Active project:** `lifops-next/`
+- **Active project:** root directory (monolith)
 - **Database:** PostgreSQL + Prisma
 - **Auth:** JWT (jose) + httpOnly cookies
 - **Frontend:** Next.js 15 App Router, React 19, Tailwind 4, ShadCN

@@ -28,7 +28,6 @@ Multi-tenant SaaS platform for elevator companies to manage installation project
 ## Quick Start
 
 ```bash
-cd lifops-next
 cp .env.example .env
 npm install
 npx prisma db push
@@ -43,12 +42,11 @@ npm run dev
 ## Project Structure
 
 ```
-lifops-next/
 ├── prisma/                 # Schema + seed
 ├── public/                 # Static assets (images, icons)
 ├── src/
 │   ├── app/                # Pages + API routes
-│   │   ├── api/            # All backend endpoints (auth, companies, dashboard, installation, maintenance, tickets, inventory, platform, subscription)
+│   │   ├── api/            # All backend endpoints
 │   │   ├── (admin)/admin/  # Platform admin UI
 │   │   ├── (auth)/         # Login pages
 │   │   ├── (marketing)/    # Landing pages

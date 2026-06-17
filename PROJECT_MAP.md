@@ -1,6 +1,6 @@
 # LiftOps — Project Map
 
-Comprehensive file map for the `lifops-next/` monolith.
+Comprehensive file map. All paths are relative to the project root.
 
 ## Configuration
 

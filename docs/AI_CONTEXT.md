@@ -13,15 +13,16 @@ Paste this file at the start of a new chat for the assistant to behave as a seni
 ```
 LiftOps/
 ├── docs/               # Architecture, API, frontend, AI guides
-├── lifops-next/        # THE active project (monolith)
-│   ├── prisma/         # Schema + seed
-│   └── src/
-│       ├── app/
-│       │   ├── api/    # All backend routes
-│       │   └── *       # Pages
-│       ├── components/ # React components
-│       ├── lib/        # Services, auth, validators, utils
-│       └── middleware.ts
+├── prisma/             # Schema + seed
+├── public/             # Static assets
+├── src/
+│   ├── app/
+│   │   ├── api/        # All backend routes
+│   │   └── *           # Pages
+│   ├── components/     # React components
+│   ├── lib/            # Services, auth, validators, utils
+│   └── middleware.ts   # Edge auth guard
+├── PROJECT_MAP.md      # File-by-file reference
 ```
 
 ## Tech Stack (as implemented)
@@ -71,8 +72,8 @@ LiftOps/
 
 ## Key Files
 
-| Area | Path (relative to `lifops-next/`) |
-|------|-----------------------------------|
+| Area | Path |
+|------|------|
 | Schema | `prisma/schema.prisma` |
 | Seed | `prisma/seed.ts` |
 | Middleware | `src/middleware.ts` |
