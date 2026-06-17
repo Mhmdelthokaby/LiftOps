@@ -34,7 +34,7 @@ export default function PlatformAdminLoginPage() {
       const result = await login(data)
       saveAuthDocs(result)
 
-      if (result.roles.includes("PlatformAdmin")) {
+      if (result.roles.includes("PlatformAdmin") || result.roles.includes("SUPER_ADMIN")) {
         toast({
           title: "Welcome",
           description: "Redirecting to the platform console…",
@@ -43,11 +43,14 @@ export default function PlatformAdminLoginPage() {
         return
       }
 
+      localStorage.removeItem("accessToken")
+      localStorage.removeItem("refreshToken")
+      localStorage.removeItem("user")
       toast({
-        title: "Signed in",
-        description: "This portal is for platform administrators. Redirecting to your workspace…",
+        variant: "destructive",
+        title: "Access denied",
+        description: "This portal is for platform administrators only. Use the tenant sign-in page.",
       })
-      router.replace(getPostLoginRedirectPath(result.roles))
     } catch (error) {
       toast({
         variant: "destructive",

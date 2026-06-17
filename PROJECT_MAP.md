@@ -166,10 +166,11 @@ Comprehensive file map. All paths are relative to the project root.
 
 #### Platform (Super Admin)
 
-| Route | Methods |
-|-------|---------|
-| `platform/users/route.ts` | GET, POST |
-| `platform/users/[id]/route.ts` | GET, PUT, DELETE |
+| Route | Methods | Purpose |
+|-------|---------|---------|
+| `platform/dashboard/route.ts` | GET | Platform-wide stats |
+| `platform/users/route.ts` | GET, POST | |
+| `platform/users/[id]/route.ts` | GET, PUT, DELETE | |
 
 #### Subscription
 
@@ -242,7 +243,8 @@ Comprehensive file map. All paths are relative to the project root.
 | `services/auth.service.ts` | Auth business logic |
 | `services/company.service.ts` | Company CRUD |
 | `services/subscription.service.ts` | Subscription/plan management |
-| `services/dashboard/` | Dashboard KPI queries |
+| `services/dashboard/dashboard.service.ts` | Company-level dashboard KPI queries |
+| `services/dashboard/platform.service.ts` | Platform-level dashboard (total companies, revenue, etc.) |
 | `services/installation/` | Customer, elevator, stage, project, offer, inspection, technician |
 | `services/maintenance/` | Contract, visit, checklist |
 | `services/inventory/` | Item, category |
@@ -257,7 +259,7 @@ Comprehensive file map. All paths are relative to the project root.
 | `api-config.ts` | API base URL config |
 | `api.ts` | All API endpoint function calls |
 | `api-platform.ts` | Platform admin API functions |
-| `user.ts` | Role helpers (isAdmin, isTechnician, etc.) |
+| `user.ts` | Role helpers (isPlatformAdmin, isTechnician, etc.) — `isPlatformAdmin` also matches `SUPER_ADMIN` |
 | `navigation.ts` | Route guards, redirect logic |
 | `jwt-edge.ts` | JWT decode for edge middleware |
 | `impersonation.ts` | Super admin impersonation helpers |

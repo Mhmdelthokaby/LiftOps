@@ -159,12 +159,24 @@ const pathMap: Record<string, string> = {
   "/api/Technician/available": "/api/installation/technicians",
   "/api/Technician/add": "/api/installation/technicians",
   "/api/subscription-plans": "/api/subscription/plans",
-  "/api/platform/dashboard": "/api/dashboard",
+
 };
 
 function mapEndpoint(endpoint: string): string {
   // Exact match first
   if (pathMap[endpoint]) return pathMap[endpoint];
+
+  // Case-insensitive lowercase normalization
+  const lowered = endpoint.toLowerCase();
+  if (lowered !== endpoint && pathMap[lowered]) return pathMap[lowered];
+  const lowerPatterns: [RegExp, string][] = [
+    [/^\/api\/emergency(\/.+)?$/, "/api/emergency$1"],
+  ];
+  for (const [regex, replacement] of lowerPatterns) {
+    if (regex.test(lowered)) {
+      return lowered;
+    }
+  }
 
   // Pattern-based matching for paths with IDs
   const patterns: [RegExp, string][] = [

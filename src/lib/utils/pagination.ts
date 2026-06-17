@@ -1,15 +1,8 @@
 import { z } from "zod";
-import { appConfig } from "@/config/app";
 
 export const paginationSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
-  pageSize: z
-    .coerce
-    .number()
-    .int()
-    .positive()
-    .max(appConfig.pagination.maxPageSize)
-    .default(appConfig.pagination.defaultPageSize),
+  pageSize: z.coerce.number().int().positive().max(100).default(20),
   sortBy: z.string().optional(),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
   search: z.string().optional(),

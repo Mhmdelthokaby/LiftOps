@@ -104,7 +104,7 @@ export const isTechnician = (): boolean => {
 }
 
 export const isPlatformAdmin = (): boolean => {
-    return hasRole('PlatformAdmin');
+    return hasAnyRole(['PlatformAdmin', 'SUPER_ADMIN']);
 }
 
 // Technicians can only view their assigned visits

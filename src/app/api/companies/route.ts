@@ -17,7 +17,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const parsed = companyQuerySchema.parse(Object.fromEntries(searchParams));
     const result = await companyService.list(parsed);
-    return response.paginated(result.items, result.meta);
+    return response.ok({
+      items: result.items,
+      totalCount: result.meta.totalItems,
+      page: result.meta.page,
+      pageSize: result.meta.pageSize,
+    });
   } catch (error) {
     return handleError(error);
   }

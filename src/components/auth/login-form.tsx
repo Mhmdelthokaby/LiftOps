@@ -32,6 +32,18 @@ export function LoginForm() {
             const result = await login(data)
             saveAuthDocs(result)
 
+            if (result.roles.includes("PlatformAdmin") || result.roles.includes("SUPER_ADMIN")) {
+                localStorage.removeItem("accessToken")
+                localStorage.removeItem("refreshToken")
+                localStorage.removeItem("user")
+                toast({
+                    variant: "destructive",
+                    title: "Access denied",
+                    description: "Platform administrators must sign in at the admin portal.",
+                })
+                return
+            }
+
             const redirectPath = getPostLoginRedirectPath(result.roles)
             
             toast({

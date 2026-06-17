@@ -41,11 +41,11 @@ export async function GET(request: NextRequest) {
       prisma.appUser.count({ where }),
     ]);
 
-    return response.paginated(users, {
+    return response.ok({
+      items: users,
+      totalCount: total,
       page,
       pageSize,
-      totalItems: total,
-      totalPages: Math.ceil(total / pageSize),
     });
   } catch (error) {
     return handleError(error);
