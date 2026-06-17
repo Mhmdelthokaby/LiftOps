@@ -1,101 +1,97 @@
 # LiftOps Architecture
 
-Documentation reflects the repository as of the last audit: backend under `LiftOps/`, frontend under `liftops-frontend/`. There is no `Src/` folder; project names are `LiftOps-BackEnd.*`.
+The project is a single Next.js 15 monolith (App Router) that serves both API routes and frontend pages from one codebase.
 
-## Project identity
-
-LiftOps is a multi-tenant SaaS for elevator operations: installation pipeline, maintenance contracts, inventory, emergency tickets, and a **platform console** for operators to manage companies, plans, and subscriptions.
-
-## System overview
+## Tech Stack
 
 | Layer | Technology |
-|--------|----------------|
-| API | ASP.NET Core (net10.0), JWT Bearer auth |
-| Application | MediatR, FluentValidation, DTOs/commands/queries |
-| Domain | Entities, enums, `Roles` constants; `AppUser` extends Identity |
-| Persistence | EF Core 10, SQL Server, global tenant query filters |
-| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, ShadCN/Radix |
+|-------|------------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript, React 19 |
+| Styling | Tailwind CSS 4, ShadCN/Radix UI |
+| Authentication | JWT (jose), httpOnly cookies, bcryptjs |
+| Database | PostgreSQL |
+| ORM | Prisma 6 |
+| API | Next.js Route Handlers |
 
-## Clean architecture flow
+## High-Level Structure
 
-Requests enter the API layer only through controllers. Controllers resolve the current user from `HttpContext`, authorize via policies, then dispatch **one** MediatR request per action. Handlers live in **Application** and depend on **interfaces** implemented in **Infrastructure** (repositories, `ApplicationDbContext`, `TokenService`, `CurrentTenantService`). **Domain** has no framework references beyond Identity stores on `AppUser`.
-
-```mermaid
-flowchart TB
-  subgraph API["LiftOps-BackEnd.API"]
-    C[Controllers]
-    M[Middleware: JWT, rate limit, subscription, errors]
-    P[Authorization policies]
-  end
-  subgraph APP["LiftOps-BackEnd.Application"]
-    H[MediatR Handlers]
-    D[DTOs / Validators]
-    I[Interfaces: ITokenService, IApplicationDbContext, ICurrentTenantService]
-  end
-  subgraph INF["LiftOps-BackEnd.Infrastructure"]
-    DB[(ApplicationDbContext + Migrations)]
-    TS[TokenService]
-    CT[CurrentTenantService]
-    S[Domain services / repositories]
-  end
-  subgraph DOM["LiftOps-BackEnd.Domain"]
-    E[Entities / Roles / Enums]
-  end
-  C --> H
-  H --> I
-  I --> TS
-  I --> DB
-  I --> CT
-  DB --> E
-  TS --> E
-  CT --> API
+```
+src/
+├── app/           # Pages + API routes (Next.js App Router)
+│   ├── api/       # All backend endpoints
+│   ├── (admin)/   # Platform admin UI
+│   ├── (auth)/    # Login pages
+│   └── (marketing)/ # Landing pages
+├── components/    # Reusable React components
+├── lib/           # Business logic, services, auth, validators
+├── config/        # App configuration
+├── types/         # Shared TypeScript types
+└── middleware.ts  # Edge middleware (auth guard)
 ```
 
-## Multi-tenant strategy
+## Data Flow
 
-### Tenant unit
+```
+Browser → Next.js Edge Middleware (auth check)
+  → Route Handler (API) or Page Component (SSR/CSR)
+    → Service Layer (src/lib/services/)
+      → Prisma Client → PostgreSQL
+```
 
-- **Tenant** = `Company` (`Companies` table).
-- Almost all business rows inherit `CompanyId` via `BaseAuditableEntity` (not `Company` itself; `Company.CompanyId` is ignored in EF).
+## API Layer
 
-### How `company_id` works (tenant users)
+All backend logic lives in `src/app/api/`. Route Handlers:
 
-1. On login/refresh, **Infrastructure** `TokenService.CreateToken` adds claim **`company_id`** only for users who are **not** in role **`PlatformAdmin`** and who have a non-null, non-empty `AppUser.CompanyId`.
-2. **Infrastructure** `CurrentTenantService` reads `company_id` (or legacy `tenant_id`) from `HttpContext.User`.
-3. **ApplicationDbContext** applies a global `HasQueryFilter` on all `BaseAuditableEntity` types: rows match when bypass flag is set **or** `EffectiveTenantId == e.CompanyId`. `EffectiveTenantId` is the current tenant from claims or an explicit override used by background jobs (`UseSystemTenantBypass`).
-4. **Program.cs** `JwtBearerEvents.OnTokenValidated`: for any **authorized, non-anonymous** endpoint that is **not** under `/api/platform`, the principal **must** include a non-empty **`company_id`** claim. That enforces tenant context on normal API traffic.
-5. Role policies such as `RequireManager` combine **role** with **`RequireAssertion(HasTenantClaim)`** so tenant admins always carry `company_id`.
+1. Parse + validate request input (zod schemas).
+2. Authenticate via JWT (middleware or per-route auth helpers).
+3. Dispatch to service layer.
+4. Return typed JSON responses.
 
-### Super admin (platform) vs tenant
+## Service Layer
 
-| Aspect | Tenant user | Platform admin (`PlatformAdmin`) |
-|--------|-------------|----------------------------------|
-| `AppUser.CompanyId` | Set to a real company GUID | **`null`** (nullable after migration `PLAT002`) |
-| JWT `company_id` | Present | **Omitted** (even if data were wrong, token builder skips it for `PlatformAdmin`) |
-| `OnTokenValidated` company check | Required on non-platform routes | **Skipped** for `/api/platform/*` paths only |
-| Authorization | Policies with tenant assertion | **`RequirePlatformAdmin`** (role only, no tenant claim) |
-| Data access | Filtered by tenant | Handlers use `IgnoreQueryFilters()` + `UseSystemTenantBypass` where needed |
+Business logic is organized by domain in `src/lib/services/`:
 
-Platform APIs live under **`/api/platform/...`** and use **`[Authorize(Policy = "RequirePlatformAdmin")]`**.
+- `auth/` — login, register, refresh, logout
+- `company/` — company CRUD
+- `dashboard/` — KPI metrics
+- `installation/` — customers, elevators, stages, projects, offers, inspections, technicians
+- `maintenance/` — contracts, visits, checklists
+- `inventory/` — items, categories
+- `tickets/` — fault/emergency tickets
+- `emergency/` — emergency ticket workflows
+- `subscription/` — plans, subscriptions, billing
 
-### Mental model
+## Auth Flow
 
-- **Missing `company_id` in JWT** ⇒ not scoped to a tenant for data APIs ⇒ rejected by JWT validation (except platform routes).
-- **`PlatformAdmin` + `CompanyId = null`** ⇒ no tenant slice; platform work is explicit and isolated from tenant filters unless code uses bypass.
+```
+Login → POST /api/auth/login
+  → Validate credentials (bcryptjs)
+  → Generate JWT (jose) with claims: sub, email, name, role, company_id
+  → Set httpOnly cookies: liftops_access, liftops_refresh
+  → Return { token, refreshToken, name, email, roles }
 
-## Frontend architecture (summary)
+Middleware (src/middleware.ts):
+  - API paths: auto-refresh expired tokens via refresh cookie
+  - Page paths: verify JWT from cookie for /admin/* routes
+```
 
-- **Next.js App Router** under `liftops-frontend/app/`.
-- **BFF-style auth**: `POST /api/auth/login` (Next Route Handler) calls the .NET API and sets **httpOnly** cookies (`liftops_access`, `liftops_refresh`) while the client still stores tokens/user in `localStorage` for the existing API client.
-- **`middleware.ts`** protects **`/admin/*`** (except `/admin/login`) by decoding the access cookie and requiring role **`PlatformAdmin`**.
-- **`AuthGuard`** continues to enforce role-based access for the rest of the app client-side.
+## Multi-Tenant Strategy
 
-## Core business domains (backend)
+- **Tenant = Company** (`companies` table).
+- All business tables inherit `companyId`.
+- JWT includes `company_id` claim for tenant users (omitted for `SUPER_ADMIN`).
+- Service layer filters queries by `companyId` from the authenticated user's token.
+- Platform admin routes under `/api/platform/*` bypass tenant scoping.
 
-Installation, maintenance, emergency, faults, inventory, customers/projects, technicians, dashboard, admin user management, **platform** (companies, plans, subscriptions, users, impersonation).
+## Key Directories
 
-## Related docs
-
-- `docs/BACKEND_GUIDE.md` — auth endpoints, DTOs, seeding.
-- `docs/FRONTEND_GUIDE.md` — routes, auth files, middleware.
-- `docs/AI_CONTEXT.md` — condensed context for AI assistants.
+| Path | Purpose |
+|------|---------|
+| `prisma/schema.prisma` | Database schema |
+| `src/app/api/` | All API endpoints |
+| `src/lib/services/` | Business logic |
+| `src/lib/auth/` | JWT, password hashing, session |
+| `src/lib/validators/` | Zod schemas |
+| `src/lib/response/` | Response helpers |
+| `src/middleware.ts` | Auth guard + token refresh |

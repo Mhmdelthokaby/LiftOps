@@ -20,26 +20,25 @@ LiftOps is a multi-tenant SaaS platform for elevator companies to run installati
 
 ## Product Roles
 
-- `Manager`
-- `InstallationAdmin`
-- `MaintenanceAdmin`
-- `InventoryAdmin`
-- `FinanceAdmin`
-- `FaultsAdmin`
-- `Technician`
-- `PlatformAdmin` (platform-level SaaS operations)
+- `MANAGER`, `ADMIN`, `TECHNICIAN`, `CLIENT`
+- `SUPER_ADMIN` (platform-level SaaS operations)
 
-## Technical Direction
+## Technical Stack
 
-- Backend: ASP.NET Core + Clean Architecture + MediatR + EF Core + SQL Server.
-- Frontend: Next.js App Router + TypeScript + ShadCN UI.
-- Security: JWT with role and tenant claims (`company_id`).
-- SaaS foundation: company-scoped data isolation + subscription enforcement.
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript, React 19 |
+| Styling | Tailwind CSS 4 + ShadCN/Radix UI |
+| Database | PostgreSQL |
+| ORM | Prisma 6 |
+| Auth | JWT (jose) + httpOnly cookies + bcryptjs |
+| API | Next.js Route Handlers (monolith) |
 
 ## Documentation Map
 
-- Backend implementation guide: `docs/BACKEND_GUIDE.md`
-- Frontend implementation guide: `docs/FRONTEND_GUIDE.md`
-- Landing site migration checklist: `docs/LANDING_MIGRATION_TASKS.md`
+- Architecture guide: `docs/ARCHITECTURE.md`
+- API guide: `docs/API_GUIDE.md`
+- Frontend guide: `docs/FRONTEND_GUIDE.md`
 - SaaS task backlog: `docs/SAAS_TASKS.md`
-
+- Project map: `lifops-next/PROJECT_MAP.md`

@@ -1,296 +1,50 @@
 # LiftOps SaaS Transformation Tasks
 
-Production-oriented backlog to evolve the single-tenant LiftOps stack (ASP.NET Core Clean Architecture + MediatR, EF Core + SQL Server, JWT + Identity, Next.js) into a multi-tenant SaaS.
-
----
-
-## Audit status (living)
-
-Use this block as the **source of truth for what is shipped vs. still planned** relative to the codebase audit.
-
-### Completed — platform authentication
-
-- **[DONE] Super Admin login** — Backend: `LoginAdminCommand` + `POST /api/auth/login` and `POST /api/Admin/login`; `AppUser` with **`CompanyId = null`** for platform operators; role **`PlatformAdmin`**; optional **`PlatformAdminSeeder`** after migrations. Frontend: **`/admin/login`**, Next Route Handlers **`/api/auth/login`** and **`/api/auth/logout`** (httpOnly cookies), **`middleware.ts`** for **`/admin/*`** (PlatformAdmin + JWT from cookie).
-- **[DONE] JWT implementation (multi-tenant + platform)** — **`TokenService`**: HMAC-signed JWT with **`company_id`** for tenant users; claim **omitted** for **`PlatformAdmin`**. **`OnTokenValidated`**: requires **`company_id`** on authorized requests **except** under **`/api/platform`**. Tenant policies combine **role + tenant claim**; **`RequirePlatformAdmin`** is role-only.
-
-### Next 3 critical tasks (recommended sprint focus)
-
-1. **Tenant onboarding** — End-to-end flow (public signup or invite-only) that creates **`Company`**, first **Owner/Manager** user, and **trial `Subscription`** with clear UX and API contract (aligns with Phase 6 / GTM items still open).
-2. **Company management (tenant-facing)** — Stable **`GET`/`PUT`** (or equivalent) for tenant profile/settings consumed by a **dashboard settings** page; frontend **FE-004** plus any missing backend surface.
-3. **Subscription + error UX in frontend** — Trial/renewal banner, handling **`subscription_inactive`** / **402** paths, and centralized **401/403** behavior (**FE-002**, **FE-003**); reduce reliance on duplicated token handling between cookies and `localStorage` where practical.
-
----
-
-## Phase 0: System Hardening
-
-### SEC-001 — Audit and close unauthenticated or overly permissive endpoints
-- [x] Inventory: add `[Authorize]` + appropriate policy to `GET /api/Inventory/value` (or equivalent route exposing total inventory value).
-- [x] Test/health: restrict `TestController` in non-development environments (remove public access or gate behind API key / internal network).
-- [x] Maintenance PDF: replace `[AllowAnonymous]` on visit PDF download with signed time-limited URLs or token query param validated per tenant (design choice documented in ADR).
-- [x] Document every `[AllowAnonymous]` and justify retention.
-
-### SEC-002 — Tighten Emergency module authorization
-- [x] Replace class-level `[Authorize]` only on `EmergencyController` with explicit policies aligned to product rules (e.g. roles allowed to create vs resolve).
-- [x] Add integration tests for forbidden cross-role access.
-
-### SEC-003 — Remove unsafe identity fallbacks
-- [x] In installation project creation (and similar), remove `Guid.NewGuid()` fallback when installation admin user id is missing from JWT; return 401/403 instead.
-- [x] Add unit tests for handler behavior when claims are absent.
-
-### SEC-004 — CORS and forwarded headers
-- [x] Replace `SetIsOriginAllowed(_ => true)` with configurable allowed origins from `appsettings` / env for staging and production.
-- [x] Configure `ForwardedHeaders` if behind reverse proxy for correct scheme/host.
-
-### SEC-005 — Input validation pass
-- [x] Ensure all write endpoints use FluentValidation or equivalent; align DTOs with max lengths matching DB columns.
-- [x] Add missing validation on MediatR commands that currently trust raw DTOs.
-
-### SEC-006 — Secrets and configuration
-- [x] Verify JWT signing keys, connection strings, and third-party keys are only from environment / Key Vault — no secrets in repo.
-- [x] Add checklist item to deployment runbook.
-
-### OBS-001 — Dashboard metrics accuracy
-- [x] Fix `OpenEmergencies` (or rename) so KPI reflects intended entity (`EmergencyTicket` vs `FaultTicket`) per product spec.
-- [x] Remove or feature-flag hardcoded revenue/expenses in dashboard handler; return real aggregates or explicit “mock” flag in API for UI.
-
----
-
-## Phase 1: Multi-Tenancy Implementation
-
-### MT-001 — Domain model: `Company` (tenant)
-- [x] Add `Company` entity: `Id`, `Name`, `Slug` (optional), `IsActive`, `CreatedAt`, audit fields.
-- [x] Add optional fields for billing contact email, timezone (for later subscription UI).
-
-### MT-002 — Wire `CompanyId` on business tables
-- [x] Add nullable-then-backfill `CompanyId` (`uniqueidentifier`) to: `Customers`, `InstallationProjects`, `Elevators`, `InstallationStages`, `StageRequiredParts`, `StageTechnicians`, `TechnicianAssignments`, `InspectionRequests`, `Offers`, `Quotations`, `QuotationAttachments`, `Notifications`, `Categories`, `InventoryItems`, `Technicians`, `MaintenanceContracts`, `MaintenanceElevators`, `MaintenanceVisits`, `MaintenanceSparePartUsages`, `MaintenanceChecklistItems`, `MaintenanceVisitChecklistItems`, `FaultTickets`, `FaultSparePartUsages`, `EmergencyTickets`.
-- [x] Confirm list against current `ApplicationDbContext` — add any new tables introduced since doc freeze.
-
-### MT-003 — User–tenant relationship
-- [x] Add `CompanyId` to `AppUser` **or** introduce `UserCompany` join table if multi-company users are in scope for MVP (pick one; default MVP: single `CompanyId` on user).
-
-### MT-004 — EF Core configuration
-- [x] Configure relationships and required `CompanyId` where appropriate after backfill.
-- [x] Add shadow property or explicit property consistency — no orphan rows.
-
-### MT-005 — Migration strategy for existing data
-- [x] Script: insert default `Company` row (“Legacy” / “Default”).
-- [x] Backfill all existing rows with `CompanyId = default company`.
-- [x] Alter columns to `NOT NULL` after backfill.
-- [x] Dry-run on copy of production DB; measure downtime window.
-
-### MT-006 — `ICurrentTenantService`
-- [x] Interface: `Guid? CompanyId { get; }`, `bool IsResolved { get; }`, `string? Slug { get; }` (if slug routing).
-- [x] Implementation reads from `HttpContext.User` claims after authentication.
-
-### MT-007 — JWT claims
-- [x] On login/refresh, emit `company_id` (and `company_slug` if used) as short-lived claims.
-- [x] Update token validation to require `company_id` for all tenant-scoped endpoints.
-
-### MT-008 — Global query filters
-- [x] In `OnModelCreating`, apply `HasQueryFilter` for each tenant entity: `e => e.CompanyId == _currentTenant.CompanyId`.
-- [x] Provide bypass mechanism for system jobs only (e.g. `IDbContextFactory` with explicit tenant id for worker).
-
-### MT-009 — Repository and handler refactor
-- [x] Audit all `DbSet<T>.Where(...)` / raw SQL — ensure no unfiltered `Set<T>()` in handlers.
-- [x] Replace any `ListAllAsync()` without tenant predicate.
-- [x] Add code analyzer rule or PR checklist: new entities must register filter + `CompanyId`.
-
-### MT-010 — SaveChanges tenant stamp
-- [x] Override `SaveChanges` / `SaveChangesAsync` to assign `CompanyId` on insert from `ICurrentTenantService` when null (defense in depth).
-
-### MT-011 — Files, PDFs, reports
-- [x] Change storage paths from `{guid}/...` to `{companyId}/{...}/...` under `wwwroot` or blob container prefix.
-- [x] Migration script: move existing files to default company prefix or lazy-migrate on first access.
-
-### MT-012 — Background jobs (if any)
-- [x] Pass explicit `CompanyId` into queued work items; no reliance on ambient HTTP context in workers.
-
----
-
-## Phase 2: Authentication & Authorization Update
-
-### AUTH-001 — Identity model
-- [x] Extend registration (admin-only or public signup — product decision) to create or join a `Company`.
-- [x] Enforce: first user of org = Owner/Manager; document role matrix per tenant.
-
-### AUTH-002 — Login / refresh
-- [x] Include `company_id` in access token; refresh token rotation re-issues same claims.
-- [x] Handle user with no company (invite pending) — return 403 with structured error code.
-
-### AUTH-003 — Policies
-- [x] Update authorization policies to combine role + tenant context (e.g. `RequireManager` AND same company as resource).
-- [x] Add `RequireFinance` usage or remove dead policy from `Program.cs` if unused.
-
-### AUTH-004 — Resource-based checks
-- [x] For `GET/PUT` by id, verify entity’s `CompanyId` matches JWT `company_id` before returning 200 (prevent ID enumeration across tenants).
-
----
-
-## Phase 3: Database Refactoring
-
-### DB-001 — Unique constraints
-- [x] Drop global unique on `InstallationProjects.ProjectNumber`; add unique index on `(CompanyId, ProjectNumber)`.
-- [x] Repeat for other natural keys (ticket numbers, inventory item numbers if globally unique today).
-
-### DB-002 — Indexes
-- [x] Add composite indexes: `(CompanyId, CreatedAt)`, `(CompanyId, Status)` on high-traffic tables per query plan review.
-
-### DB-003 — Foreign keys across tenant boundary
-- [x] Verify no cross-tenant FK possibility (e.g. technician assigned to elevator in another company) — enforce in application layer + DB check constraints if needed.
-
-### DB-004 — Connection resiliency
-- [x] Enable retry on transient failures for SQL Server in EF Core for SaaS traffic patterns.
-
----
-
-## Phase 4: Subscription System (MVP)
-
-### SUB-001 — Entities
-- [x] `Subscription`: `Id`, `CompanyId`, `PlanId`, `Status` (Trial, Active, PastDue, Cancelled), `CurrentPeriodEnd`, `ExternalCustomerId` (nullable), audit.
-- [x] `Plan`: `Id`, `Code` (basic, pro), `Name`, `MonthlyPrice`, feature flags JSON or columns.
-
-### SUB-002 — Business rules
-- [x] On create company: create `Subscription` with `Trial` and `CurrentPeriodEnd = UtcNow + trial days`.
-- [x] Job or synchronous check: `PastDue` after failed payment webhook (stub webhook for MVP).
-
-### SUB-003 — Enforcement middleware / filter
-- [x] `SubscriptionStatusFilter` or middleware: block mutating verbs when `Cancelled` or `PastDue` (configurable allowlist: GET profile, POST billing portal).
-- [x] Return 402 or 403 with machine-readable code `subscription_inactive`.
-
-### SUB-004 — Admin override
-- [x] Platform super-admin role (not tenant Manager) can extend trial / set status — separate API under `/api/platform/...` with distinct auth.
-
----
-
-## Phase 5: API Refactoring
-
-### API-001 — Tenant audit sweep
-- [x] Per controller, verify MediatR pipeline receives tenant context; add integration tests that two tenants cannot read each other’s IDs.
-
-### API-002 — Response consistency
-- [x] Standardize error envelope: `{ code, message, details? }` for 4xx/5xx from API layer.
-- [x] Ensure no stack traces in production responses.
-
-### API-003 — Pagination and sorting
-- [x] All list endpoints: require explicit `page`, `pageSize`, sort; default sort includes `CompanyId` in index-friendly order.
-
-### API-004 — Rate limiting
-- [x] Per-tenant rate limits on auth and expensive endpoints (optional MVP: per-IP if easier).
-
----
-
-## Phase 6: Frontend Updates
-
-### FE-001 — Company context
-- [ ] Parse `company_id` from JWT payload (or session) after login; store in secure memory / context provider — avoid duplicating sensitive data in `localStorage` beyond token if possible.
-  - *Partial today:* tokens + user JSON live in `localStorage`; BFF sets httpOnly cookies for `/admin` middleware. Full “secure memory only” and explicit `company_id` React context is still open.
-
-### FE-002 — API client
-- [ ] Ensure `Authorization` header on all calls; centralize 401/403 handling — redirect to login or “subscription expired” screen based on error code.
-
-### FE-003 — Subscription UI (MVP)
-- [ ] Banner or settings row: plan name, renewal date, status; warning when trial < 7 days.
-- [ ] Link placeholder to billing portal (even if external URL stub).
-
-### FE-004 — Tenant settings page
-- [ ] Form: company display name, timezone; `PUT /api/company` (new endpoint).
-
-### FE-005 — Faults module (if product requires)
-- [ ] Add Faults screens + `lib/api.ts` helpers to match backend (currently missing in frontend per architecture review).
-
----
-
-## Phase 7: Deployment & DevOps
-
-### OPS-001 — Environments
-- [ ] Define `Development`, `Staging`, `Production` with separate DBs and JWT keys.
-
-### OPS-002 — Configuration
-- [ ] Document all env vars: `ConnectionStrings__DefaultConnection`, `Jwt__*`, `Cors__Origins`, blob storage keys, payment provider keys.
-
-### OPS-003 — CI/CD
-- [ ] Pipeline: build + test backend; build Next.js; run EF migrations on deploy (or manual gated step for prod).
-- [ ] Artifact: Docker images or Azure Web App zip — team choice documented.
-
-### OPS-004 — Database migrations
-- [ ] Migration order documented: Phase 1 migrations before enabling tenant middleware in production (feature flag).
-
-### OPS-005 — Observability
-- [ ] Structured logging with `CompanyId` on each log line (where resolved).
-- [ ] Health checks: DB + disk; readiness vs liveness for orchestrator.
-
----
-
-## Phase 8: Go-To-Market Preparation
-
-### GTM-001 — Demo tenant
-- [ ] Seed script: demo company, sample customers/projects, read-only flag optional.
-
-### GTM-002 — Trial flow
-- [ ] Public signup page → creates Company + Owner user + Trial subscription — or invite-only MVP.
-
-### GTM-003 — Pricing
-- [ ] Internal doc: plan tiers, elevator/project limits, support SLAs (even if not enforced in code in MVP).
-
-### GTM-004 — Legal
-- [ ] Terms of service and privacy policy links in signup; cookie banner if EU traffic.
-
----
-
-## Execution Timeline (2–4 weeks plan)
-
-### Week 1 — Critical path: security + tenant foundation
-| Priority | Work |
+Production-oriented backlog for the merged Next.js project (`lifops-next/`).
+
+## Audit Status
+
+### ✅ Completed — Platform Authentication
+- Super Admin login with JWT, httpOnly cookies, role-based auth.
+- Platform admin UI under `src/app/(admin)/admin/`.
+- Middleware auth guard for `/admin/*` routes.
+- Token refresh via httpOnly cookie rotation.
+- Auth bypass dev mode (`NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH`).
+
+### ✅ Completed — Multi-Tenant Foundation
+- `Company` entity with `companyId` on all business tables.
+- JWT `company_id` claim for tenant users (omitted for `SUPER_ADMIN`).
+- Service-layer tenant filtering on all queries.
+- Platform admin routes bypass tenant scoping.
+
+### ✅ Completed — Core Modules
+- Installation pipeline (customers, elevators, stages, projects, offers, inspections, technicians).
+- Maintenance contracts, visits, checklists.
+- Emergency and fault ticket workflows.
+- Inventory management with categories.
+- Dashboard with KPIs and charts.
+- Subscription plans and management.
+
+### ✅ Completed — Prisma Migration
+- Schema converted from EF Core to Prisma.
+- All relations validated for Prisma 6.
+- Seed script for development data.
+
+## Next Critical Tasks
+
+| Priority | Task |
 |----------|------|
-| P0 | Phase 0: SEC-001–SEC-004, OBS-001 (stop data leaks and misleading metrics). |
-| P0 | Phase 1: MT-001–MT-005, MT-006–MT-008, MT-010 (Company entity, migrations, backfill, filters, SaveChanges stamp). |
-| P1 | Phase 2: AUTH-001–AUTH-002 (JWT `company_id`, user linkage). |
+| P0 | End-to-end testing of all API routes |
+| P0 | Build verification (`npm run build`) |
+| P1 | Error boundary and loading states for all pages |
+| P1 | PDF generation for reports and invoices |
+| P2 | Email service integration |
+| P2 | Real-time notifications (SSE/WebSocket) |
 
-**Exit criteria:** Default company in DB; all existing rows scoped; new requests cannot insert without tenant; filters active in dev/staging.
+## Known Gaps
 
----
-
-### Week 2 — Enforcement + API + DB constraints
-| Priority | Work |
-|----------|------|
-| P0 | Phase 1: MT-009, MT-011 (handlers + file paths for new uploads). |
-| P0 | Phase 2: AUTH-003–AUTH-004; Phase 3: DB-001–DB-003. |
-| P1 | Phase 5: API-001–API-002. |
-
-**Exit criteria:** Composite unique indexes; resource-by-id checks; integration tests for two-tenant isolation.
-
----
-
-### Week 3 — Subscription MVP + frontend
-| Priority | Work |
-|----------|------|
-| P0 | Phase 4: SUB-001–SUB-003; platform admin override stub if needed. |
-| P0 | Phase 6: FE-001–FE-003. |
-| P1 | Phase 4: SUB-004; Phase 6: FE-004. |
-
-**Exit criteria:** Trial expiry blocks writes; UI shows status; happy path signup → trial → blocked after expiry (test env).
-
----
-
-### Week 4 — Hardening, DevOps, GTM
-| Priority | Work |
-|----------|------|
-| P0 | Phase 7: OPS-001–OPS-004; production config review. |
-| P1 | Phase 5: API-003–API-004; Phase 0 remaining validation (SEC-005–SEC-006). |
-| P1 | Phase 8: GTM-001–GTM-002; demo seed. |
-
-**Exit criteria:** Staging deploy with migrations; smoke tests; demo tenant ready for sales.
-
----
-
-### Priorities summary
-- **P0 (blockers):** Tenant isolation correct; no cross-tenant reads; auth gaps closed; subscription gate for write API.
-- **P1 (near-term):** File migration, rate limits, full FE settings, GTM assets.
-- **Defer if schedule slips:** Public multi-company per user (AUTH-001 join table), advanced billing webhooks, Faults UI (FE-005).
-
-### Critical path
-`Company` + migrations + global filters → JWT claims → handler/resource checks → unique indexes → subscription middleware → frontend token handling → deploy with feature flag.
-
----
-
-*Tasks are intentionally implementation-shaped; adjust IDs and scope to your issue tracker (Jira/Azure DevOps).*
+- Finance module: partial implementation
+- Email service: not wired
+- Faults UI (FE-005): matching frontend screens for backend tickets
+- Public signup flow (tenant onboarding)
+- Subscription enforcement middleware for write operations

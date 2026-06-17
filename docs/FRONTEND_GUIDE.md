@@ -1,89 +1,91 @@
 # Frontend Guide
 
-This guide reflects **`liftops-frontend/`** (Next.js App Router). There is no Pages Router in use for the main app.
-
 ## Stack
 
-- **Next.js** 16.0.x (App Router)
+- **Next.js** 15.x (App Router)
 - **React** 19.x, **TypeScript** 5.x
-- **Tailwind CSS** 4.x, **ShadCN-style** components (Radix primitives under `components/ui/`)
-- **react-hook-form**, **zod**, **@hookform/resolvers**
-- **TanStack Table** for data tables (admin console)
+- **Tailwind CSS** 4.x, **ShadCN/Radix** UI components
+- **react-hook-form** + **zod** for forms
 - **lucide-react** icons
+- **recharts** for charts
 
-## Directory structure (high level)
+## Directory Structure
 
 | Path | Role |
 |------|------|
-| `app/` | Routes: marketing, dashboard modules, **`(admin)/admin/*`**, **`(auth)/admin/login`**, **`api/auth/*`** |
-| `components/` | Feature UI, **`auth-guard.tsx`**, **`auth/login-form.tsx`**, sidebar, ShadCN building blocks |
-| `lib/` | **`auth.ts`**, **`api.ts`**, **`api-client.ts`**, **`api-platform.ts`**, **`api-config.ts`**, **`user.ts`**, **`navigation.ts`**, **`jwt-edge.ts`** |
-| `hooks/` | Data hooks (e.g. admin platform data) |
-| `types/` | Shared TS types (e.g. `types/admin.ts`) |
-| `middleware.ts` | Edge middleware for **`/admin/*`** protection |
+| `src/app/(marketing)/` | Landing pages (/, /about, /pricing, /contact) |
+| `src/app/(auth)/` | Login pages (/login, /admin/login) |
+| `src/app/(admin)/admin/` | Platform admin dashboard |
+| `src/app/dashboard/` | Main app dashboard |
+| `src/app/clients/` | Client management pages |
+| `src/app/projects/` | Project pages |
+| `src/app/technicians/` | Technician management |
+| `src/app/maintenance/` | Maintenance pages |
+| `src/app/installation/` | Installation pages |
+| `src/app/emergency/` | Emergency pages |
+| `src/app/inventory/` | Inventory pages |
+| `src/app/inspection/` | Inspection pages |
+| `src/app/finance/` | Finance pages |
+| `src/app/settings/` | Settings pages |
+| `src/components/` | Reusable UI components |
+| `src/components/ui/` | ShadCN primitives |
+| `src/hooks/` | Custom React hooks |
+| `src/lib/` | API client, auth helpers, utils |
+| `src/types/` | Shared TypeScript types |
 
-Route groups **`(admin)`** and **`(auth)`** organize layouts without affecting the URL path.
+## Authentication
 
-## Authentication — client and BFF
+### Client-Side Auth (`src/lib/auth-client.ts`)
 
-### `lib/auth.ts`
+- **`login(data)`** — POST to `/api/auth/login`, stores tokens in localStorage.
+- **`logout()`** — calls `/api/auth/logout`, clears localStorage, redirects to `/login`.
+- **`getCurrentUser()`** — reads user from localStorage.
+- **`getValidToken()`** — returns valid token or refreshes if expired.
+- **`refreshToken()`** — POST to `/api/Admin/refresh-token`.
 
-- **`login(data)`** — **`POST`** to same-origin **`/api/auth/login`** (Next Route Handler). On success, use **`saveAuthDocs`** to persist **accessToken**, **refreshToken**, and **user** JSON in **`localStorage`** (existing API client behavior).
-- **`loginAdmin(data)`** — direct **`POST`** to **`${NEXT_PUBLIC_API_URL}/api/auth/login`** for tools or non-browser use.
-- **`saveAuthDocs`**, **`logout`**, **`getCurrentUser`**, **`getValidToken`**, **`refreshToken`**, token expiry helpers.
-- **`logout`** calls **`POST /api/auth/logout`** to clear **httpOnly** cookies, then clears **localStorage** and redirects to **`/login`**.
+### API Client (`src/lib/api-client.ts`)
 
-### Route Handlers
+- Centralized fetch wrapper with automatic auth headers.
+- Handles token refresh on 401.
+- URL mapping layer rewrites .NET-era paths to current routes.
 
-- **`app/api/auth/login/route.ts`**: server-side fetch to backend **`/api/auth/login`**, sets cookies **`liftops_access`** and **`liftops_refresh`** (**httpOnly**, **SameSite=Lax**, secure in production).
-- **`app/api/auth/logout/route.ts`**: deletes those cookies via **`cookies()`**.
+### Auth Guard (`src/components/auth-guard.tsx`)
 
-Environment: **`NEXT_PUBLIC_API_URL`** (see `lib/api-config.ts`) must point at the .NET API (e.g. `http://localhost:5295`).
+- Wraps authenticated routes in root layout.
+- Uses localStorage token + role helpers.
+- Public paths (/, /about, /login, etc.) bypass auth check.
 
-### Login pages
+### Edge Middleware (`src/middleware.ts`)
 
-- **`app/login/page.tsx`** — tenant/general sign-in; uses **`LoginForm`** → **`login()`** (BFF + cookies).
-- **`app/(auth)/admin/login/page.tsx`** — platform admin entry; same **`login()`**; on success redirects **`PlatformAdmin`** to **`/admin/dashboard`**, others to role-based home via **`getPostLoginRedirectPath`**.
+- Protects `/admin/*` routes (except login).
+- Decodes JWT from httpOnly cookie.
+- Requires `SUPER_ADMIN` role for admin pages.
+- Automatically refreshes expired API tokens via refresh cookie.
 
-Marketing link from **`/login`** to **`/admin/login`** is present for operators.
+## Routing
 
-## Middleware (`middleware.ts`)
+Route groups organize layouts without affecting URL:
+- `(marketing)` — landing pages with navbar/footer
+- `(auth)` — login pages centered layout
+- `(admin)` — admin sidebar layout
 
-- **Public** paths include **`/login`**, **`/admin/login`**, marketing routes, etc.
-- For paths under **`/admin`** (except login): if **`NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH !== "true"`**:
-  - Requires **`liftops_access`** cookie.
-  - Decodes JWT payload (no verification signature in middleware — **first gate only**; API still validates tokens).
-  - Rejects expired tokens ( **`exp`** ).
-  - Requires **`PlatformAdmin`** in **`role`** claim(s) or long-form role claim URI used by .NET.
-- Non–platform users hitting **`/admin`** are redirected to **`/login`**.
-- **`NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH=true`** skips middleware enforcement for **`/admin/*`** (client **`AuthGuard`** may still apply).
+## Styling
 
-Helpers live in **`lib/jwt-edge.ts`**.
+- ShadCN components from `src/components/ui/`.
+- Tailwind CSS v4 for all styling.
+- `cn()` utility from `src/lib/utils/` for conditional classes.
+- Four themes: light, dark, sunset, frost (via `next-themes`).
 
-## Client-side guard (`components/auth-guard.tsx`)
+## Key Files
 
-- Wraps authenticated app in root layout.
-- Uses **`localStorage`** token + **`lib/user.ts`** role helpers.
-- **`skipLoginForAdminRoutes()`** in **`lib/navigation.ts`** is **`true`** only when **`NEXT_PUBLIC_DEV_BYPASS_ADMIN_AUTH === "true"`** (default: strict).
-- Role-based route map for modules (dashboard, maintenance, etc.); **`/admin`** requires **`isPlatformAdmin()`** unless bypass is on.
-
-## Navigation helpers (`lib/navigation.ts`)
-
-- **`getPostLoginRedirectPath(roles)`** — includes **`PlatformAdmin` → `/admin/dashboard`**.
-- **`PUBLIC_PATHS`** / **`isPublicPath`** — includes **`/admin/login`**.
-
-## Platform admin UI
-
-- Under **`app/(admin)/admin/`**: dashboard, companies, plans, subscriptions, users, etc.
-- API calls via **`lib/api-platform.ts`** and shared **`apiClient`** (Bearer from **`localStorage`**).
-
-## Styling and UI rules
-
-- Use **ShadCN** primitives from **`components/ui/`** and **Tailwind** utilities.
-- Prefer **`cn()`** from **`lib/utils`** for conditional classes.
-
-## Related docs
-
-- `docs/ARCHITECTURE.md` — tenant vs platform JWT behavior.
-- `docs/BACKEND_GUIDE.md` — login API contract.
-- `docs/AI_CONTEXT.md` — naming and prompting.
+| File | Purpose |
+|------|---------|
+| `src/lib/auth-client.ts` | Auth helpers (login, logout, token management) |
+| `src/lib/api-client.ts` | HTTP client with auth + URL mapping |
+| `src/lib/api-config.ts` | API base URL config |
+| `src/lib/api.ts` | All API function calls |
+| `src/lib/user.ts` | Role helpers (isAdmin, isTechnician, etc.) |
+| `src/lib/navigation.ts` | Route guards, redirect helpers |
+| `src/lib/jwt-edge.ts` | JWT decode for edge middleware |
+| `src/middleware.ts` | Page + API auth guard |
+| `src/components/auth-guard.tsx` | Client-side route protection |

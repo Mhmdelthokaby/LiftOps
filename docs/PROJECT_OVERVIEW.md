@@ -2,25 +2,18 @@
 
 ## What LiftOps Is
 
-LiftOps is a multi-tenant SaaS platform for elevator companies to manage operations end-to-end:
+LiftOps is a multi-tenant SaaS platform for elevator companies to manage operations end-to-end from a single Next.js application:
 
 - Installation projects
 - Maintenance contracts and visits
 - Emergency/fault tickets
 - Inventory and spare parts
 - Technician assignments
-- Role-based admin operations
+- Role-based admin operations (platform console)
 
 ## Problem It Solves
 
-Many elevator businesses run critical operations through spreadsheets and manual processes, which causes:
-
-- Missed schedules
-- Weak visibility
-- Slow coordination across teams
-- Higher operational risk
-
-LiftOps centralizes workflows and makes operations trackable and scalable.
+Many elevator businesses run critical operations through spreadsheets and manual processes, which causes missed schedules, weak visibility, slow coordination, and higher operational risk. LiftOps centralizes workflows and makes operations trackable and scalable.
 
 ## Product Goals
 
@@ -31,29 +24,27 @@ LiftOps centralizes workflows and makes operations trackable and scalable.
 
 ## Core Roles
 
-- `Manager`
-- `InstallationAdmin`
-- `MaintenanceAdmin`
-- `InventoryAdmin`
-- `FinanceAdmin`
-- `FaultsAdmin`
-- `Technician`
-- `PlatformAdmin` (platform-level operations)
+- `SUPER_ADMIN` — platform-wide operations
+- `ADMIN` — company-level management
+- `MANAGER` — day-to-day operational management
+- `TECHNICIAN` — field work and visit execution
+- `CLIENT` — customer portal access
 
-## Current Documentation Map
+## Architecture
 
-- High-level idea: `docs/PROJECT_IDEA.md`
-- System architecture: `docs/ARCHITECTURE.md`
-- AI working rules: `docs/AI_GUIDELINES.md`
-- Backend guide: `docs/BACKEND_GUIDE.md`
+Single Next.js 15 project with:
+
+- **API layer:** Route Handlers under `src/app/api/`
+- **Service layer:** Business logic in `src/lib/services/`
+- **Auth layer:** JWT (jose) + httpOnly cookies + bcryptjs
+- **Data layer:** Prisma ORM + PostgreSQL
+- **Frontend:** React 19 Server/Client Components, Tailwind 4, ShadCN UI
+
+## Documentation Map
+
+- Architecture: `docs/ARCHITECTURE.md`
+- API guide: `docs/API_GUIDE.md`
 - Frontend guide: `docs/FRONTEND_GUIDE.md`
 - SaaS backlog: `docs/SAAS_TASKS.md`
-
-## Scope Direction
-
-LiftOps is actively evolving from a single-tenant product to a production-grade SaaS with:
-
-- Tenant-aware security and authorization
-- Subscription lifecycle support
-- Better frontend handling for auth and tenant context
-- Deployment and observability hardening
+- AI context: `docs/AI_CONTEXT.md`
+- Project map: `lifops-next/PROJECT_MAP.md`
