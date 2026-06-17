@@ -8,11 +8,15 @@ datasource db {
 }
 
 enum UserRole {
-  SUPER_ADMIN
   ADMIN
   MANAGER
   TECHNICIAN
   CLIENT
+}
+
+enum PlatformAdminRole {
+  SUPER_ADMIN
+  ADMIN
 }
 
 enum SubscriptionStatus {
@@ -179,6 +183,36 @@ model RefreshToken {
   user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+model PlatformAdmin {
+  id           String             @id @default(uuid())
+  email        String             @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         PlatformAdminRole  @default(SUPER_ADMIN)
+  isActive     Boolean            @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  refreshTokens PlatformAdminRefreshToken[]
+
+  @@map("platform_admins")
+}
+
+model PlatformAdminRefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  adminId   String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  admin PlatformAdmin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("platform_admin_refresh_tokens")
 }
 
 model Customer {

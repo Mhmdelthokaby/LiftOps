@@ -4,6 +4,8 @@ import { tryRefreshAccessToken } from "@/lib/auth/middleware";
 
 const apiPublicPaths = [
   "/api/auth/login",
+  "/api/auth/admin/login",
+  "/api/auth/admin/refresh",
   "/api/auth/register",
   "/api/auth/refresh",
   "/api/health",
@@ -74,8 +76,9 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
 
+      const type = payload.type;
       const role = payload.role;
-      if (!role || !["PlatformAdmin", "SUPER_ADMIN"].includes(role)) {
+      if (type !== "admin" || !role || !["SUPER_ADMIN", "ADMIN"].includes(role)) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
         url.search = "";

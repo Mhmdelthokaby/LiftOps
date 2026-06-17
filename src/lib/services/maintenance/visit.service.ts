@@ -39,7 +39,7 @@ export class MaintenanceVisitService {
       data: {
         status: "COMPLETED",
         completedDate: new Date(),
-        checklistData: input.checklistData ?? undefined,
+        checklistData: (input.checklistData ?? undefined) as never,
         notes: input.notes,
       },
       include: { elevator: true, contract: true },
@@ -87,7 +87,7 @@ export class MaintenanceVisitService {
       },
       include: {
         elevator: { select: { id: true, serialNumber: true, type: true, floors: true } },
-        contract: { select: { projectNumber: true, customer: { select: { name: true, address: true } } } },
+        contract: { select: { id: true, startDate: true, endDate: true, isActive: true } },
         technician: { select: { id: true, firstName: true, lastName: true } },
       },
       orderBy: { scheduledDate: "asc" },

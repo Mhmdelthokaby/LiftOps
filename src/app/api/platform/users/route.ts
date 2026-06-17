@@ -7,8 +7,8 @@ import { authenticate } from "@/lib/auth/middleware";
 export async function GET(request: NextRequest) {
   try {
     const auth = await authenticate(request);
-    if (auth.auth.role !== "SUPER_ADMIN") {
-      throw new ForbiddenError("Only platform admins can access this resource");
+    if (auth.auth.type !== "admin") {
+      return response.unauthorized("Only platform admins can access this resource");
     }
 
     const { searchParams } = request.nextUrl;

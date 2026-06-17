@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken, verifyRefreshToken, createTokenPair } from "./jwt";
+import { verifyAccessToken, verifyRefreshToken, createTokenPair, createAdminTokenPair } from "./jwt";
 import { getAccessTokenFromCookies, getRefreshTokenFromCookies, createAccessTokenCookie, createRefreshTokenCookie } from "./session";
 import { prisma } from "@/lib/db/client";
 import { UnauthorizedError, ForbiddenError } from "@/lib/errors";
@@ -12,6 +12,7 @@ export type AuthenticatedRequest = NextRequest & {
     role: string;
     firstName: string;
     lastName: string;
+    type?: "user" | "admin";
   };
 };
 
@@ -38,6 +39,7 @@ export async function authenticate(request: NextRequest): Promise<AuthenticatedR
       role: payload.role,
       firstName: payload.firstName,
       lastName: payload.lastName,
+      type: payload.type ?? "user",
     };
     return request as AuthenticatedRequest;
   } catch {
@@ -61,20 +63,69 @@ export async function tryRefreshAccessToken(request: NextRequest): Promise<{ res
       return null;
     }
 
+    const accessToken = await getAccessTokenFromCookies();
+    let isAdmin = false;
+    if (accessToken) {
+      try {
+        const payload = await verifyAccessToken(accessToken);
+        isAdmin = payload.type === "admin";
+      } catch {
+        // token may be expired, proceed with refresh token
+      }
+    }
+
     const refreshToken = await getRefreshTokenFromCookies();
     if (!refreshToken) return null;
 
-    const { sub: userId } = await verifyRefreshToken(refreshToken);
+    const { sub: ownerId } = await verifyRefreshToken(refreshToken);
+
+    if (isAdmin) {
+      const admin = await prisma.platformAdmin.findUnique({
+        where: { id: ownerId },
+        select: { id: true, email: true, role: true, firstName: true, lastName: true, isActive: true },
+      });
+
+      if (!admin || !admin.isActive) return null;
+
+      const storedToken = await prisma.platformAdminRefreshToken.findFirst({
+        where: { token: refreshToken, adminId: ownerId, revokedAt: null },
+      });
+
+      if (!storedToken) return null;
+
+      const tokenPair = await createAdminTokenPair(admin);
+      const response = NextResponse.next();
+
+      response.cookies.set(createAccessTokenCookie(tokenPair.accessToken, tokenPair.accessTokenExpiresAt));
+      response.cookies.set(createRefreshTokenCookie(tokenPair.refreshToken, tokenPair.refreshTokenExpiresAt));
+
+      await prisma.platformAdminRefreshToken.update({
+        where: { id: storedToken.id },
+        data: { token: tokenPair.refreshToken },
+      });
+
+      (request as AuthenticatedRequest).auth = {
+        userId: admin.id,
+        email: admin.email,
+        companyId: "",
+        role: admin.role,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        type: "admin",
+      };
+
+      return { response, renewed: true };
+    }
 
     const user = await prisma.appUser.findUnique({
-      where: { id: userId },
+      where: { id: ownerId },
       select: { id: true, email: true, companyId: true, role: true, firstName: true, lastName: true, isActive: true },
     });
 
     if (!user || !user.isActive) return null;
 
     const storedToken = await prisma.refreshToken.findFirst({
-      where: { token: refreshToken, userId, revokedAt: null },
+      where: { token: refreshToken, userId: ownerId, revokedAt: null },
     });
 
     if (!storedToken) return null;
@@ -97,6 +148,7 @@ export async function tryRefreshAccessToken(request: NextRequest): Promise<{ res
       role: user.role,
       firstName: user.firstName,
       lastName: user.lastName,
+      type: "user",
     };
 
     return { response, renewed: true };

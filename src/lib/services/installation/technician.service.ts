@@ -21,7 +21,6 @@ export class TechnicianService {
       where: { id },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
-        visits: { orderBy: { scheduledDate: "desc" }, take: 10 },
       },
     });
     if (!technician) throw new NotFoundError("Technician", id);
@@ -39,7 +38,6 @@ export class TechnicianService {
       where: { companyId },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true } },
-        _count: { select: { visits: true } },
       },
       orderBy: { createdAt: "desc" },
     });

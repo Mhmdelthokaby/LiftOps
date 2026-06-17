@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     const quotation = await prisma.project.update({
       where: { id: body.projectId },
-      data: { totalPrice: body.price, notes: body.notes },
+      data: { notes: body.notes },
     });
 
     return response.created(quotation, "Quotation created");

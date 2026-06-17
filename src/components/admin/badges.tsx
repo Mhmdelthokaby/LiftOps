@@ -62,7 +62,7 @@ export function PlanCodeBadge({ code, name }: { code: string; name?: string }) {
 }
 
 export function RoleBadge({ role }: { role: string }) {
-  const isPlatform = role === "PlatformAdmin"
+  const isPlatform = role === "SUPER_ADMIN"
   return (
     <span
       className={cn(

@@ -1,30 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService } from "@/lib/services/auth.service";
 import { AdminAuthService } from "@/lib/services/admin-auth.service";
-import { response, handleError } from "@/lib/response";
+import { loginSchema } from "@/lib/auth/schemas";
+import { handleError } from "@/lib/response";
+import { ValidationError } from "@/lib/errors";
 import { createAccessTokenCookie, createRefreshTokenCookie } from "@/lib/auth/session";
 
-const authService = new AuthService();
 const adminAuthService = new AdminAuthService();
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { token, refreshToken } = body as { token?: string; refreshToken?: string };
+    const parsed = loginSchema.safeParse(body);
 
-    if (!refreshToken) {
-      return NextResponse.json({ message: "Refresh token is required" }, { status: 400 });
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.flatten());
     }
 
-    let result;
-    let isAdmin = false;
-
-    try {
-      result = await authService.refresh(refreshToken);
-    } catch {
-      result = await adminAuthService.refresh(refreshToken);
-      isAdmin = true;
-    }
+    const result = await adminAuthService.login(parsed.data);
 
     const res = NextResponse.json({
       token: result.accessToken,

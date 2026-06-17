@@ -10,7 +10,7 @@ const companyService = new CompanyService();
 export async function GET(request: NextRequest) {
   try {
     const auth = await authenticate(request);
-    if (auth.auth.role !== "SUPER_ADMIN") {
+    if (auth.auth.type !== "admin") {
       throw new ForbiddenError("Only platform admins can list companies");
     }
 
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const auth = await authenticate(request);
-    if (auth.auth.role !== "SUPER_ADMIN") {
+    if (auth.auth.type !== "admin") {
       throw new ForbiddenError("Only platform admins can create companies");
     }
 

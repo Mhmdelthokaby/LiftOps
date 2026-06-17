@@ -9,7 +9,7 @@ type RouteParams = { params: Promise<{ id: string }> };
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const auth = await authenticate(request);
-    if (auth.auth.role !== "SUPER_ADMIN") {
+    if (auth.auth.type !== "admin") {
       throw new ForbiddenError("Only platform admins can manage users");
     }
 

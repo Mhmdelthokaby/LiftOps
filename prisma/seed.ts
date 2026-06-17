@@ -1,21 +1,10 @@
-import { PrismaClient, UserRole, SubscriptionStatus, BillingCycle } from "@prisma/client";
+import { PrismaClient, SubscriptionStatus, BillingCycle } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding database...");
-
-  const company = await prisma.company.upsert({
-    where: { id: "00000000-0000-0000-0000-000000000000" },
-    update: {},
-    create: {
-      id: "00000000-0000-0000-0000-000000000000",
-      name: "LiftOps Platform",
-      slug: "lifops-platform",
-      isActive: true,
-    },
-  });
 
   const plan = await prisma.subscriptionPlan.upsert({
     where: { id: "00000000-0000-0000-0000-000000000001" },
@@ -40,41 +29,21 @@ async function main() {
   });
 
   const passwordHash = await bcrypt.hash("Admin@123", 12);
-  const admin = await prisma.appUser.upsert({
-    where: {
-      companyId_email: {
-        companyId: company.id,
-        email: "admin@lifops.com",
-      },
-    },
+  const admin = await prisma.platformAdmin.upsert({
+    where: { email: "admin@lifops.com" },
     update: {},
     create: {
-      id: "00000000-0000-0000-0000-000000000002",
-      companyId: company.id,
       email: "admin@lifops.com",
       passwordHash,
       firstName: "Platform",
       lastName: "Admin",
-      role: UserRole.SUPER_ADMIN,
+      role: "SUPER_ADMIN",
       isActive: true,
-      emailVerifiedAt: new Date(),
-    },
-  });
-
-  await prisma.subscription.upsert({
-    where: { companyId: company.id },
-    update: {},
-    create: {
-      companyId: company.id,
-      planId: plan.id,
-      status: SubscriptionStatus.ACTIVE,
-      startDate: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     },
   });
 
   console.log("Seed completed!");
-  console.log({ company: company.name, admin: admin.email });
+  console.log({ admin: admin.email });
 }
 
 main()

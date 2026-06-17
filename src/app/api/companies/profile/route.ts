@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
       phone: company.phone,
       address: company.address,
       isActive: company.isActive,
-      subscription: company.subscription,
     });
   } catch (error) {
     return handleError(error);

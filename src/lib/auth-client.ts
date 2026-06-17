@@ -43,7 +43,7 @@ export const login = async (data: LoginFormData): Promise<AuthResponse> => {
 };
 
 export const loginAdmin = async (data: LoginFormData): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const response = await fetch(`/api/auth/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: data.email, password: data.password }),

@@ -75,7 +75,7 @@ export class AuthService {
         lastName: input.lastName,
         phone: input.phone,
         companyId: input.companyId ?? "",
-        role: input.companyId ? "ADMIN" : "SUPER_ADMIN",
+        role: "ADMIN",
       },
     });
 

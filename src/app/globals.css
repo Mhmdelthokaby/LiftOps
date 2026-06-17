@@ -204,6 +204,87 @@
   --sidebar-ring: #EF8C34;
 }
 
+/* Admin platform colours — match marketing industrial palette */
+.admin {
+  --background: #171821;
+  --foreground: #FFFFFF;
+  --card: #2B2D42;
+  --card-foreground: #FFFFFF;
+  --popover: #2B2D42;
+  --popover-foreground: #FFFFFF;
+  --primary: #EF8C34;
+  --primary-foreground: #2B2D42;
+  --secondary: #222330;
+  --secondary-foreground: #FFFFFF;
+  --muted: #222330;
+  --muted-foreground: #8D99AE;
+  --accent: #EF8C34;
+  --accent-foreground: #2B2D42;
+  --destructive: #EF233C;
+  --destructive-foreground: #FFFFFF;
+  --border: #35374C;
+  --input: #35374C;
+  --ring: #EF8C34;
+  --chart-1: #EF8C34;
+  --chart-2: #2B2D42;
+  --chart-3: #8D99AE;
+  --chart-4: #D90429;
+  --chart-5: #4A4E69;
+  --radius: 0.625rem;
+  --sidebar: #222330;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #EF8C34;
+  --sidebar-primary-foreground: #2B2D42;
+  --sidebar-accent: #2B2D42;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #35374C;
+  --sidebar-ring: #EF8C34;
+  --success: #22C55E;
+  --success-foreground: #FFFFFF;
+  --warning: #EF8C34;
+  --warning-foreground: #2B2D42;
+}
+
+/* Light admin — keep matching light marketing */
+.light .admin {
+  --background: #FFFFFF;
+  --foreground: #2B2D42;
+  --card: #FFFFFF;
+  --card-foreground: #2B2D42;
+  --popover: #FFFFFF;
+  --popover-foreground: #2B2D42;
+  --primary: #2B2D42;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F4F6F8;
+  --secondary-foreground: #2B2D42;
+  --muted: #F4F6F8;
+  --muted-foreground: #6C757D;
+  --accent: #EF8C34;
+  --accent-foreground: #2B2D42;
+  --destructive: #EF233C;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(43, 45, 66, 0.12);
+  --input: rgba(43, 45, 66, 0.12);
+  --ring: #EF8C34;
+  --chart-1: #2B2D42;
+  --chart-2: #EF8C34;
+  --chart-3: #8D99AE;
+  --chart-4: #D90429;
+  --chart-5: #4A4E69;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #2B2D42;
+  --sidebar-primary: #2B2D42;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F4F6F8;
+  --sidebar-accent-foreground: #2B2D42;
+  --sidebar-border: rgba(43, 45, 66, 0.12);
+  --sidebar-ring: #EF8C34;
+  --success: #22C55E;
+  --success-foreground: #2B2D42;
+  --warning: #EF8C34;
+  --warning-foreground: #2B2D42;
+}
+
 /* Light variations mapping for marketing routes */
 .light .marketing {
   --background: #FFFFFF;

@@ -32,7 +32,7 @@ export class TicketService {
         elevator: true,
         reporter: { select: { id: true, firstName: true, lastName: true, email: true } },
         assignee: { select: { id: true, firstName: true, lastName: true } },
-        spareParts: { include: { item: true } },
+
       },
     });
     if (!ticket) throw new NotFoundError("Ticket", id);

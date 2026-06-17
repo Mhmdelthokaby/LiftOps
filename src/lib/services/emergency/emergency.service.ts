@@ -84,7 +84,7 @@ export class EmergencyService {
         status: { in: ["OPEN", "ASSIGNED", "IN_PROGRESS"] },
       },
       include: {
-        elevator: { select: { id: true, serialNumber: true, location: true } },
+        elevator: { select: { id: true, serialNumber: true } },
         reporter: { select: { id: true, firstName: true, lastName: true } },
         assignee: { select: { id: true, firstName: true, lastName: true } },
       },

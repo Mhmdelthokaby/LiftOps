@@ -19,7 +19,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const auth = await authenticate(request);
-    if (auth.auth.role !== "SUPER_ADMIN") {
+    if (auth.auth.type !== "admin") {
       throw new ForbiddenError("Only platform admins can create subscription plans");
     }
 

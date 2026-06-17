@@ -3,8 +3,6 @@ import { NotFoundError } from "@/lib/errors";
 
 type OfferData = {
   inspectionRequestId: string;
-  installationPricePerUnit: number;
-  totalInstallationPrice: number;
   notes?: string;
 };
 
@@ -16,8 +14,6 @@ export class OfferService {
     return prisma.project.update({
       where: { id: data.inspectionRequestId },
       data: {
-        installationPricePerUnit: data.installationPricePerUnit,
-        totalPrice: data.totalInstallationPrice,
         notes: data.notes,
       },
     });

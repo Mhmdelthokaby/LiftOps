@@ -1,7 +1,7 @@
 export {
   signAccessToken, signRefreshToken,
   verifyAccessToken, verifyRefreshToken,
-  createTokenPair,
+  createTokenPair, createAdminTokenPair,
 } from "./jwt";
 export type { TokenPayload, TokenPair } from "./jwt";
 

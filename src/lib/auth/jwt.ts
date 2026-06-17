@@ -11,6 +11,7 @@ export interface TokenPayload extends JWTPayload {
   role: string;
   firstName: string;
   lastName: string;
+  type?: "user" | "admin";
 }
 
 export interface TokenPair {
@@ -20,7 +21,7 @@ export interface TokenPair {
   refreshTokenExpiresAt: number;
 }
 
-export async function signAccessToken(payload: Omit<TokenPayload, keyof JWTPayload>): Promise<string> {
+export async function signAccessToken(payload: TokenPayload): Promise<string> {
   return new SignJWT({ ...payload } as unknown as JWTPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -66,9 +67,37 @@ export async function createTokenPair(
     role: user.role,
     firstName: user.firstName,
     lastName: user.lastName,
+    type: "user",
   });
 
   const refreshToken = await signRefreshToken(user.id);
+
+  return {
+    accessToken,
+    refreshToken,
+    accessTokenExpiresAt: accessExpiry,
+    refreshTokenExpiresAt: refreshExpiry,
+  };
+}
+
+export async function createAdminTokenPair(
+  admin: { id: string; email: string; role: string; firstName: string; lastName: string }
+): Promise<TokenPair> {
+  const now = Math.floor(Date.now() / 1000);
+  const accessExpiry = now + env.JWT_ACCESS_EXPIRY_MINUTES * 60;
+  const refreshExpiry = now + env.JWT_REFRESH_EXPIRY_DAYS * 86400;
+
+  const accessToken = await signAccessToken({
+    sub: admin.id,
+    email: admin.email,
+    companyId: "",
+    role: admin.role,
+    firstName: admin.firstName,
+    lastName: admin.lastName,
+    type: "admin",
+  });
+
+  const refreshToken = await signRefreshToken(admin.id);
 
   return {
     accessToken,

@@ -26,7 +26,7 @@ export default function AdminRootLayout({ children }: { children: React.ReactNod
   }, [])
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
+    <div className="admin flex h-screen bg-background text-foreground">
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-sidebar transition-all duration-200",

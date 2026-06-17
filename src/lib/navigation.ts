@@ -2,7 +2,7 @@
  * Default route after successful login (and when redirecting authenticated users away from /login).
  */
 export function getPostLoginRedirectPath(roles: string[]): string {
-  if (roles.includes("PlatformAdmin") || roles.includes("SUPER_ADMIN")) return "/admin/dashboard"
+  if (roles.includes("SUPER_ADMIN")) return "/admin/dashboard"
   if (roles.includes("Technician")) return "/technician/visits"
   if (roles.includes("Manager")) return "/dashboard"
   if (roles.includes("InstallationAdmin")) return "/installation"

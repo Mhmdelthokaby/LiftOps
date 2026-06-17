@@ -9,7 +9,7 @@ const platformService = new PlatformDashboardService();
 export async function GET(request: NextRequest) {
   try {
     const auth = await authenticate(request);
-    if (!["SUPER_ADMIN", "PlatformAdmin"].includes(auth.auth.role)) {
+    if (auth.auth.type !== "admin") {
       throw new ForbiddenError("Only platform administrators can access this endpoint");
     }
     const stats = await platformService.getStats();

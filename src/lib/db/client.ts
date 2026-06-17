@@ -45,17 +45,18 @@ export function createTenantClient(companyId: string) {
           }
 
           if (model === "Company") {
+            const where = "where" in args ? args.where : {};
             if (["findUnique", "findFirst"].includes(operation)) {
-              return query({ ...args, where: { ...args.where, id: companyId } });
+              return query({ ...args, where: { ...where, id: companyId } });
             }
             if (["update", "delete"].includes(operation)) {
-              return query({ ...args, where: { ...args.where, id: companyId } });
+              return query({ ...args, where: { ...where, id: companyId } });
             }
             return query(args);
           }
 
-          const where = args.where || {};
-          return query({ ...args, where: { ...where, companyId } });
+          const where = "where" in args ? (args.where as Record<string, unknown>) || {} : {};
+          return query({ ...args, where: { ...where, companyId } } as never);
         },
       },
     },

@@ -6,7 +6,7 @@ import type { Stage } from "@prisma/client";
 export class StageService {
   async create(companyId: string, input: CreateStageInput): Promise<Stage> {
     return prisma.stage.create({
-      data: { ...input, companyId },
+      data: input,
       include: { project: { select: { id: true, name: true, code: true } } },
     });
   }

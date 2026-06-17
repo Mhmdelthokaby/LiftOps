@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (status) where.projectStatus = status;
 
     const offers = await prisma.project.findMany({
-      where: { ...where, installationPricePerUnit: { gt: 0 } },
+      where,
       include: {
         customer: true,
         elevators: true,

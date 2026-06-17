@@ -1,3 +1,31 @@
+import type {
+  Company,
+  AppUser,
+  Subscription,
+  UserRole,
+  SubscriptionPlan,
+  Project,
+  Customer,
+  Stage,
+  Elevator,
+  Technician,
+  MaintenanceContract,
+  MaintenanceVisit,
+  MaintenanceChecklist,
+  Ticket,
+  Item,
+  ItemCategory,
+  RefreshToken,
+  SubscriptionStatus,
+  BillingCycle,
+  ProjectStatus,
+  ElevatorStatus,
+  VisitStatus,
+  TicketPriority,
+  TicketStatus,
+  EmergencyLevel,
+} from "@prisma/client";
+
 export type {
   Company,
   AppUser,
@@ -24,7 +52,7 @@ export type {
   TicketPriority,
   TicketStatus,
   EmergencyLevel,
-} from "@prisma/client";
+};
 
 export interface UserDto {
   id: string;

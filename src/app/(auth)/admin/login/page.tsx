@@ -6,8 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { Loader2, Eye, EyeOff, Shield } from "lucide-react"
 import Link from "next/link"
-import { loginSchema, type LoginFormData, login, saveAuthDocs } from "@/lib/auth-client"
-import { getPostLoginRedirectPath } from "@/lib/navigation"
+import { loginSchema, type LoginFormData, loginAdmin, saveAuthDocs } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,7 +30,7 @@ export default function PlatformAdminLoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      const result = await login(data)
+      const result = await loginAdmin(data)
       saveAuthDocs(result)
 
       if (result.roles.includes("PlatformAdmin") || result.roles.includes("SUPER_ADMIN")) {

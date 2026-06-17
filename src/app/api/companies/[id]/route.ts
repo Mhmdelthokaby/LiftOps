@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const auth = await authenticate(request);
     const { id } = await params;
 
-    if (auth.auth.role !== "SUPER_ADMIN" && auth.auth.companyId !== id) {
+    if (auth.auth.type !== "admin" && auth.auth.companyId !== id) {
       throw new ForbiddenError("Access denied");
     }
 
@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const auth = await authenticate(request);
     const { id } = await params;
 
-    if (auth.auth.role !== "SUPER_ADMIN" && auth.auth.companyId !== id) {
+    if (auth.auth.type !== "admin" && auth.auth.companyId !== id) {
       throw new ForbiddenError("Access denied");
     }
 
@@ -51,7 +51,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const auth = await authenticate(request);
-    if (auth.auth.role !== "SUPER_ADMIN") {
+    if (auth.auth.type !== "admin") {
       throw new ForbiddenError("Only platform admins can delete companies");
     }
 
