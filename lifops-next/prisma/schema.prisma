@@ -1,0 +1,415 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  CLIENT
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  TRIAL
+  PAST_DUE
+  CANCELLED
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum ProjectStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+enum ElevatorStatus {
+  OPERATIONAL
+  UNDER_MAINTENANCE
+  OUT_OF_SERVICE
+  PENDING_INSPECTION
+}
+
+enum VisitStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  REOPENED
+}
+
+enum EmergencyLevel {
+  LEVEL_1
+  LEVEL_2
+  LEVEL_3
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?
+  address   String?
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscription          Subscription?
+  users                 AppUser[]
+  projects              Project[]
+  maintenanceContracts  MaintenanceContract[]
+  inventoryItems        Item[]
+  customers             Customer[]
+  elevators             Elevator[]
+  technicians           Technician[]
+  maintenanceVisits     MaintenanceVisit[]
+  maintenanceChecklists MaintenanceChecklist[]
+  tickets               Ticket[]
+  itemCategories        ItemCategory[]
+
+  @@map("companies")
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  companyId            String             @unique
+  status               SubscriptionStatus @default(TRIAL)
+  startDate            DateTime           @default(now())
+  endDate              DateTime?
+  currentPeriodEnd     DateTime?
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  cancelledAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  company Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan    SubscriptionPlan? @relation(fields: [planId], references: [id])
+  planId  String?
+
+  @@map("subscriptions")
+}
+
+model SubscriptionPlan {
+  id           String       @id @default(uuid())
+  name         String
+  description  String?
+  price        Decimal      @db.Decimal(10, 2)
+  billingCycle BillingCycle
+  features     Json         @default("{}")
+  maxUsers     Int          @default(10)
+  maxProjects  Int          @default(50)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model AppUser {
+  id              String    @id @default(uuid())
+  companyId       String
+  email           String
+  passwordHash    String
+  firstName       String
+  lastName        String
+  phone           String?
+  avatarUrl       String?
+  role            UserRole  @default(CLIENT)
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  company         Company            @relation(fields: [companyId], references: [id])
+  refreshTokens   RefreshToken[]
+  assignedVisits  MaintenanceVisit[]
+  createdTickets  Ticket[]
+  assignedTickets Ticket[]           @relation("AssignedTechnician")
+  technician      Technician?
+
+  @@unique([companyId, email])
+  @@map("app_users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Customer {
+  id            String   @id @default(uuid())
+  companyId     String
+  name          String
+  contactPerson String
+  phone         String?
+  email         String?
+  address       String
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company  Company   @relation(fields: [companyId], references: [id])
+  projects Project[]
+
+  @@map("customers")
+}
+
+model Project {
+  id         String        @id @default(uuid())
+  companyId  String
+  customerId String
+  name       String
+  code       String
+  status     ProjectStatus @default(PENDING)
+  address    String
+  startDate  DateTime?
+  endDate    DateTime?
+  notes      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  customer  Customer   @relation(fields: [customerId], references: [id])
+  stages    Stage[]
+  elevators Elevator[]
+
+  @@unique([companyId, code])
+  @@map("projects")
+}
+
+model Stage {
+  id        String   @id @default(uuid())
+  projectId String
+  name      String
+  order     Int
+  createdAt DateTime @default(now())
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  elevators Elevator[]
+
+  @@map("stages")
+}
+
+model Elevator {
+  id                 String         @id @default(uuid())
+  companyId          String
+  projectId          String
+  stageId            String?
+  serialNumber       String
+  brand              String?
+  model              String?
+  type               String?
+  capacity           Int?
+  floors             Int?
+  status             ElevatorStatus @default(OPERATIONAL)
+  installDate        DateTime?
+  lastInspectionDate DateTime?
+  nextInspectionDate DateTime?
+  notes              String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  company           Company            @relation(fields: [companyId], references: [id])
+  project           Project            @relation(fields: [projectId], references: [id])
+  stage             Stage?             @relation(fields: [stageId], references: [id])
+  maintenanceVisits MaintenanceVisit[]
+  tickets           Ticket[]
+
+  @@unique([companyId, serialNumber])
+  @@map("elevators")
+}
+
+model Technician {
+  id          String   @id @default(uuid())
+  companyId   String
+  userId      String   @unique
+  specialty   String?
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+  user    AppUser @relation(fields: [userId], references: [id])
+
+  @@map("technicians")
+}
+
+model MaintenanceContract {
+  id             String   @id @default(uuid())
+  companyId      String
+  customerId     String
+  startDate      DateTime
+  endDate        DateTime
+  visitFrequency Int      @default(1)
+  value          Decimal  @db.Decimal(10, 2)
+  notes          String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company Company            @relation(fields: [companyId], references: [id])
+  visits  MaintenanceVisit[]
+
+  @@map("maintenance_contracts")
+}
+
+model MaintenanceVisit {
+  id            String      @id @default(uuid())
+  companyId     String
+  contractId    String?
+  elevatorId    String
+  technicianId  String?
+  scheduledDate DateTime
+  completedDate DateTime?
+  status        VisitStatus @default(SCHEDULED)
+  notes         String?
+  checklistData Json?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  company    Company              @relation(fields: [companyId], references: [id])
+  contract   MaintenanceContract? @relation(fields: [contractId], references: [id])
+  elevator   Elevator             @relation(fields: [elevatorId], references: [id])
+  technician AppUser?             @relation(fields: [technicianId], references: [id])
+  spareParts UsedSparePart[]
+
+  @@map("maintenance_visits")
+}
+
+model MaintenanceChecklist {
+  id        String   @id @default(uuid())
+  companyId String
+  name      String
+  items     Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@map("maintenance_checklists")
+}
+
+model UsedSparePart {
+  id        String   @id @default(uuid())
+  visitId   String
+  itemId    String
+  quantity  Int
+  notes     String?
+  createdAt DateTime @default(now())
+
+  visit MaintenanceVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  item  Item             @relation(fields: [itemId], references: [id])
+
+  @@map("used_spare_parts")
+}
+
+model Ticket {
+  id          String         @id @default(uuid())
+  companyId   String
+  elevatorId  String
+  reportedBy  String
+  assignedTo  String?
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(OPEN)
+  isEmergency Boolean        @default(false)
+  title       String
+  description String
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  company  Company  @relation(fields: [companyId], references: [id])
+  elevator Elevator @relation(fields: [elevatorId], references: [id])
+  reporter AppUser  @relation(fields: [reportedBy], references: [id])
+  assignee AppUser? @relation("AssignedTechnician", fields: [assignedTo], references: [id])
+
+  @@map("tickets")
+}
+
+model ItemCategory {
+  id          String   @id @default(uuid())
+  companyId   String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+  items   Item[]
+
+  @@unique([companyId, name])
+  @@map("item_categories")
+}
+
+model Item {
+  id          String   @id @default(uuid())
+  companyId   String
+  categoryId  String?
+  name        String
+  sku         String?
+  description String?
+  unit        String?
+  quantity    Int      @default(0)
+  minQuantity Int      @default(5)
+  unitCost    Decimal? @db.Decimal(10, 2)
+  supplier    String?
+  location    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company  Company         @relation(fields: [companyId], references: [id])
+  category ItemCategory?   @relation(fields: [categoryId], references: [id])
+  usedIn   UsedSparePart[]
+
+  @@unique([companyId, sku])
+  @@map("items")
+}
