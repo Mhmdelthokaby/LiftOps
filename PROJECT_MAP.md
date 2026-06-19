@@ -85,12 +85,14 @@ Comprehensive file map. All paths are relative to the project root.
 
 | Route | Method | Handler |
 |-------|--------|---------|
-| `auth/login/route.ts` | POST | Login with email/password |
+| `auth/login/route.ts` | POST | Login with email/password (tenant users) |
 | `auth/register/route.ts` | POST | Register new user |
 | `auth/refresh/route.ts` | POST | Refresh access token |
 | `auth/logout/route.ts` | POST | Clear cookies |
 | `auth/me/route.ts` | GET | Current user profile |
-| `Admin/refresh-token/route.ts` | POST | Alias for frontend .NET-era refresh |
+| `auth/admin/login/route.ts` | POST | Platform admin login (PlatformAdmin table) |
+| `auth/admin/refresh/route.ts` | POST | Platform admin token refresh |
+| `Admin/refresh-token/route.ts` | POST | Alias: tries tenant refresh, falls back to admin refresh |
 
 #### Companies
 
@@ -177,7 +179,7 @@ Comprehensive file map. All paths are relative to the project root.
 | Route | Methods |
 |-------|---------|
 | `subscription/route.ts` | GET, PUT, POST |
-| `subscription/plans/route.ts` | GET, POST |
+| `subscription/plans/route.ts` | GET (supports `?all=true` for inactive), POST |
 | `subscription/plans/[id]/route.ts` | GET, PUT, DELETE |
 | `subscription/change-plan/route.ts` | POST |
 | `subscription/webhook/route.ts` | POST |
@@ -228,10 +230,10 @@ Comprehensive file map. All paths are relative to the project root.
 
 | File | Purpose |
 |------|---------|
-| `auth-client.ts` | Client auth (login, logout, token mgmt) |
+| `auth-client.ts` | Client auth (login, loginAdmin, logout, token mgmt) |
 | `auth/index.ts` | Auth barrel export |
-| `auth/jwt.ts` | Server-side JWT sign/verify (jose) |
-| `auth/middleware.ts` | API token refresh middleware helper |
+| `auth/jwt.ts` | Server-side JWT sign/verify (jose); TokenPayload with `type: "user" | "admin"` |
+| `auth/middleware.ts` | API auth middleware: authenticate(), admin-aware tryRefreshAccessToken() |
 | `auth/password.ts` | bcryptjs hash/compare |
 | `auth/schemas.ts` | Auth zod validation schemas |
 | `auth/session.ts` | Session utilities |
@@ -242,7 +244,8 @@ Comprehensive file map. All paths are relative to the project root.
 |------|---------|
 | `services/auth.service.ts` | Auth business logic |
 | `services/company.service.ts` | Company CRUD |
-| `services/subscription.service.ts` | Subscription/plan management |
+| `services/subscription.service.ts` | Subscription/plan management (SubscriptionPlanService, SubscriptionLifecycleService) |
+| `services/admin-auth.service.ts` | Platform admin auth (login/refresh/logout vs PlatformAdmin table) |
 | `services/dashboard/dashboard.service.ts` | Company-level dashboard KPI queries |
 | `services/dashboard/platform.service.ts` | Platform-level dashboard (total companies, revenue, etc.) |
 | `services/installation/` | Customer, elevator, stage, project, offer, inspection, technician |
@@ -259,8 +262,8 @@ Comprehensive file map. All paths are relative to the project root.
 | `api-config.ts` | API base URL config |
 | `api.ts` | All API endpoint function calls |
 | `api-platform.ts` | Platform admin API functions |
-| `user.ts` | Role helpers (isPlatformAdmin, isTechnician, etc.) — `isPlatformAdmin` also matches `SUPER_ADMIN` |
-| `navigation.ts` | Route guards, redirect logic |
+| `user.ts` | Role helpers (isPlatformAdmin checks `type === "admin"`, isTechnician, etc.) |
+| `navigation.ts` | Route guards, post-login redirect logic (tenant vs admin) |
 | `jwt-edge.ts` | JWT decode for edge middleware |
 | `impersonation.ts` | Super admin impersonation helpers |
 | `company-tier.ts` | Company tier/plan helpers |
