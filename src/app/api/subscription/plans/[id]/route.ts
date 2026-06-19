@@ -37,3 +37,18 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     return handleError(error);
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  try {
+    const auth = await authenticate(request);
+    if (auth.auth.type !== "admin") {
+      throw new ForbiddenError("Only platform admins can delete plans");
+    }
+
+    const { id } = await params;
+    await planService.delete(id);
+    return response.ok(null, "Plan deleted successfully");
+  } catch (error) {
+    return handleError(error);
+  }
+}

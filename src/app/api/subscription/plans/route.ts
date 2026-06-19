@@ -7,9 +7,11 @@ import { authenticate } from "@/lib/auth/middleware";
 
 const planService = new SubscriptionPlanService();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const plans = await planService.list();
+    const { searchParams } = new URL(request.url);
+    const includeInactive = searchParams.get("all") === "true";
+    const plans = await planService.list(includeInactive);
     return response.ok(plans);
   } catch (error) {
     return handleError(error);

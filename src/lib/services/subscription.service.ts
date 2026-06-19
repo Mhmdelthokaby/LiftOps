@@ -37,6 +37,12 @@ export class SubscriptionPlanService {
     if (!plan) throw new NotFoundError("SubscriptionPlan", id);
     return plan;
   }
+
+  async delete(id: string): Promise<void> {
+    const existing = await prisma.subscriptionPlan.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("SubscriptionPlan", id);
+    await prisma.subscriptionPlan.delete({ where: { id } });
+  }
 }
 
 export class SubscriptionLifecycleService {

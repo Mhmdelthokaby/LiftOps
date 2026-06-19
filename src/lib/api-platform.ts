@@ -129,17 +129,17 @@ export async function extendTrial(companyId: string, days: number): Promise<void
 }
 
 export async function getPlans(): Promise<Plan[]> {
-  const response = await apiClient("/api/platform/plans", { method: "GET" })
+  const response = await apiClient("/api/subscription/plans?all=true", { method: "GET" })
   return parseResponse<Plan[]>(response)
 }
 
 export async function getPlanById(id: string): Promise<Plan> {
-  const response = await apiClient(`/api/platform/plans/${id}`, { method: "GET" })
+  const response = await apiClient(`/api/subscription/plans/${id}`, { method: "GET" })
   return parseResponse<Plan>(response)
 }
 
 export async function createPlan(data: Partial<Plan>): Promise<Plan> {
-  const response = await apiClient("/api/platform/plans", {
+  const response = await apiClient("/api/subscription/plans", {
     method: "POST",
     body: JSON.stringify(data),
   })
@@ -147,7 +147,7 @@ export async function createPlan(data: Partial<Plan>): Promise<Plan> {
 }
 
 export async function updatePlan(id: string, data: Partial<Plan>): Promise<Plan> {
-  const response = await apiClient(`/api/platform/plans/${id}`, {
+  const response = await apiClient(`/api/subscription/plans/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
   })
@@ -155,7 +155,7 @@ export async function updatePlan(id: string, data: Partial<Plan>): Promise<Plan>
 }
 
 export async function deletePlan(id: string): Promise<void> {
-  const response = await apiClient(`/api/platform/plans/${id}`, {
+  const response = await apiClient(`/api/subscription/plans/${id}`, {
     method: "DELETE",
   })
   await parseVoid(response)
